@@ -3,6 +3,7 @@
 #include<iostream>
 #include<fstream>
 #include<boost/dynamic_bitset.hpp>
+#include<cstring>
 using namespace std;
 
 // Gerencia de espaco livre
@@ -35,38 +36,78 @@ void LRU();
 void zeraR();
 void copiaMem_Vir();
 void copiaVir_Mem();
-void criaArquivoMem(fstream &arquivo_mem, streamsize total){
+void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
     for (int i = 0; i < total; i+=2)
         arquivo_mem.write("-1", 2);
 
 }
-void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m){
+void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
     for (int i = 0; i < virtual_m; i+=2)
         arquivo_vir.write("-1", 2);
 }
-void fechaArquivos(fstream &file1, fstream &file2){
+void fechaArquivos(fstream &file1, fstream &file2) {
     file1.close();
     file2.close();
 }
 
-void simulador(ifstream arquivo, int gerenciadorMemoria, int paginacao, int intervalo){
+Processo criaProcesso(string linha, int PID) {
+    int t0 = atoi(std::strtok(linha, " ")); 
+    string nome = std::strtok(NULL, " ");
+    int tf = atoi(std::strtok(NULL, " "));
+    int b = atoi(std::strtok(NULL, " "));
+    std::list<int> p, t;
 
-    int p = 0;
-    int t = 0;
-    Processo proc = Processo(3, 1, &p, &t);
-
-    int total = atoi(argv[1]);
-    int virtual_m = atoi(argv[2]);
+    // p_i = -1 significa que o processo nao esta usando a memoria no tempo t_i
+    p.push_back(-1);
+    t.push_back(t0);
+    linha = std::strtok(NULL, " ");
+    while(linha != NULL) {
+        p.push_back(atoi(linha));
+        linha = std::strtok(NULL, " ");
+        t.push_back(atoi(linha));
+        linha = std::strtok(NULL, " ");
+    }
+    p.push_back(-1);
+    t.push_back(tf);
     
+    Processo proc = Processo(b, PID, p, t);
+    return proc;
+}
+
+
+void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int intervalo){
+
+    string linha;
+    std::getline(arq, linha);
+    int total = atoi(std::strtok(linha, " "));
+    int virtual_m = atoi(std::strtok(NULL, " "));
+    int s = atoi(std::strtok(NULL, " "));
+    int pag = atoi(std::strtok(NULL, " "));
+        
     fstream file, file2;
     criaArquivoMem(file, total);
     criaArquivoVir(file2, virtual_m);
     boost::dynamic_bitset<> bitmap_mem(total);
     boost::dynamic_bitset<> bitmap_vir(virtual_m);
+
+    while(linha != NULL) {
+        int t0 = atoi(std::strtok(linha, " "));
+        if (list.empty()) {
+            Processo p = 
+        }
+            
+            while (t0 > )
+    }
+
+
+
+
+
+    
 
     // Exemplo
     // bitmap_mem[0] = bitmap_mem[1] = bitmap_mem[5] = bitmap_mem[6] = bitmap_mem[10] = bitmap_mem[13] = 1;
