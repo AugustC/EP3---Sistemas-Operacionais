@@ -5,4 +5,4 @@ class Pagina {
     bool M;
     bool present_ausent;
     int endereco;
-}
+};
