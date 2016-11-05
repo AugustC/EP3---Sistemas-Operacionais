@@ -1,4 +1,5 @@
 #include "Processos.hpp"
+#include "Paginas.hpp"
 #include<iostream>
 
 // Gerencia de espaco livre
@@ -25,7 +26,6 @@ fstream criaArquivoMem(total){
     arquivo_mem.write(&aux, total); // Se total for em bytes
     return arquivo_mem;
 }
-
 fstream criaArquivoVir(virtual_m){
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     fstream arquivo_vir;
@@ -35,4 +35,6 @@ fstream criaArquivoVir(virtual_m){
     return arquivo_vir;
 }
 
-void simulador(FILE * arquivo, int gerenciadorMemoria, int paginacao, int intervalo);
+void simulador(ifstream arquivo, int gerenciadorMemoria, int paginacao, int intervalo){
+    
+}
