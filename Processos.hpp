@@ -37,8 +37,6 @@ public:
     }
 };
 
-
-// Implementar comparacao entre Processos, i. e.,
 // Processo A > B, <=> A.t[ind] > B.t[ind]
 
 bool compara (const Processo & a, const Processo & b) {
