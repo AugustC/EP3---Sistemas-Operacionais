@@ -81,13 +81,15 @@ Processo criaProcesso(string linha, int PID) {
 
 void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int intervalo){
 
+    int PID = 0;
     string linha;
     std::getline(arq, linha);
     int total = atoi(std::strtok(linha, " "));
     int virtual_m = atoi(std::strtok(NULL, " "));
     int s = atoi(std::strtok(NULL, " "));
     int pag = atoi(std::strtok(NULL, " "));
-        
+    std::list<Processo> lista;
+    
     fstream file, file2;
     criaArquivoMem(file, total);
     criaArquivoVir(file2, virtual_m);
@@ -95,12 +97,15 @@ void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int interval
     boost::dynamic_bitset<> bitmap_vir(virtual_m);
 
     while(linha != NULL) {
-        int t0 = atoi(std::strtok(linha, " "));
-        if (list.empty()) {
-            Processo p = 
+        if (lista.empty()) {
+            Processo p = criaProcesso(linha, PID);
+            PID++;
         }
-            
-            while (t0 > )
+        else {
+            int t0 = atoi(std::strtok(linha, " "));
+            while (!lista.empty && t0 > lista.front.proximo_tempo()){
+                // Pega minimo, mexe na memoria
+            };
     }
 
 
