@@ -3,8 +3,8 @@
 class Processo {
     int base;
     unsigned int PID;
-    int* p;
-    int* t;
+    std::list<int> p;
+    std::list<int> t;
 
 public:
 
@@ -26,6 +26,15 @@ public:
     void definir_base(int base) {
         this->base = base;
     }
+
+    int proximo_tempo() {
+        return t.front;
+    }
+
+    void elimina_primeiros() {
+        p.erase(p.front);
+        t.erase(t.front);
+    }
 };
 
 
@@ -33,5 +42,5 @@ public:
 // Processo A > B, <=> A.t[ind] > B.t[ind]
 
 bool compara (const Processo & a, const Processo & b) {
-	return ( a.indice < b.indice);
+    return (a.proximo_tempo() < b.proximo_tempo());
 }  
