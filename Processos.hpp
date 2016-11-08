@@ -31,7 +31,7 @@ public:
         this->base = base;
     }
 
-    int proximo_tempo() {
+    int proximo_tempo() const {
         return t.front();
     }
 
