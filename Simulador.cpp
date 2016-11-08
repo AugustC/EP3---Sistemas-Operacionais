@@ -1,11 +1,12 @@
-#include "Processos.hpp"
-#include "Paginas.hpp"
 #include<iostream>
 #include<fstream>
 #include<boost/dynamic_bitset.hpp>
 #include<cstring>
 #include<sstream>
 #include<string>
+#include "Processos.hpp"
+#include "Paginas.hpp"
+
 using namespace std;
 
 // Gerencia de espaco livre
@@ -22,8 +23,6 @@ int FirstFit(int program_size, boost::dynamic_bitset<> bitmap){
                 return (i - program_size);
         }
 }
-
-
 int NextFit();
 int BestFit();
 int WorstFit();
@@ -55,6 +54,16 @@ void fechaArquivos(fstream &file1, fstream &file2) {
     file1.close();
     file2.close();
 }
+void escreveArquivoVir(fstream &arquivo_mem, Processo p){
+
+    int base = p.base;
+    int limite = p.limite;
+    std::string pid = std::to_string(p.PID);
+    arquivo_mem.seekp(base);
+
+    for (int i = 0; i < limite; i+=pid.size())
+        arquivo_mem.write(pid, pid.size());
+}
 
 Processo criaProcesso(string linha, int PID) {
     
@@ -83,16 +92,16 @@ Processo criaProcesso(string linha, int PID) {
     p.push_back(-1);
     t.push_back(tf);
     
-    Processo proc = Processo(b, PID, p, t);
+    Processo proc = Processo(b, PID, p, t, nome);
     return proc;
 }
 
 
-void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int intervalo){
+void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int intervalo){
 
     int PID = 0;
     std::string linha;
-    std::getline(arq, linha);
+    std::getline(*arq, linha);
     std::istringstream linhastream(linha);
     std::string token;
     
@@ -112,10 +121,14 @@ void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int interval
     boost::dynamic_bitset<> bitmap_vir(virtual_m);
     std::list<Processo> lista;
     
-    while(std::getline(linhastream, token, ' ')) {
+    while(std::getline(*arq, linha)) {
         if (lista.empty()) {
             Processo p = criaProcesso(linha, PID);
             PID++;
+	    int base = FirstFit(p.limite, bitmap_vir);
+	    p.definir_base(base);
+	    p.pega_endereco(); 	// para deletar o t0
+	    lista.push_back(p);
         }
         else {
 	    std::istringstream linhastream(linha);
@@ -123,12 +136,25 @@ void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int interval
 	    std::getline(linhastream, token, ' ');
             int t0 = atoi(token.c_str());
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
-                // Pega minimo, mexe na memoria
-            };
+                // Pega minimo dos processos que estao em execucao, mexe na memoria
+		
+            }
+	    Processo p = criaProcesso(linha, PID);
+	    int base = FirstFit(p.limite, bitmap_vir);
+	    p.definir_base(base);
+	    p.pega_endereco(); 	// para deletar o t0
+	    std::cout << p.proximo_tempo() <<"\n";
+	    PID++;
+	    lista.push_back(p);
+	    std::cout << "Antes de ordenar\n";
+	    for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
+		std::cout << it->proximo_tempo() << "\n";
+	    lista.sort(compara);
+	    std::cout << "Depois de ordenar\n";
+	    for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
+		std::cout << it->proximo_tempo() << "\n";
 	}
-    }	
-    // Exemplo
-    // bitmap_mem[0] = bitmap_mem[1] = bitmap_mem[5] = bitmap_mem[6] = bitmap_mem[10] = bitmap_mem[13] = 1;
+    }
     
     fechaArquivos(file,file2);
     

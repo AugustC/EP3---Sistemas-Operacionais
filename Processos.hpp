@@ -2,22 +2,22 @@
 #include<list>
 
 class Processo {
-    int base;
-    unsigned int PID;
     std::list<int> p;
     std::list<int> t;
 
 public:
 
-    int indice;
+    unsigned int PID;
+    int base;
+    std::string nome;
     int limite;
     
-    Processo(int limite, int PID, std::list<int> p, std::list<int> t){
+    Processo(int limite, int PID, std::list<int> p, std::list<int> t, std::string nome){
         this->limite = limite;
         this->PID = PID;
         this->p = p;
         this->t = t;
-        this->indice = 0;
+	this->nome = nome;
     }
     
     int pega_endereco() {

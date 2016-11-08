@@ -2,8 +2,8 @@
 #include<cstdlib>
 #include<boost/dynamic_bitset.hpp>
 #include<list>
-#include "Simulador.cpp"
 #include<fstream>
+#include "Simulador.cpp"
 
 // Prompt
 int main(int argc, char* argv[]) {
@@ -13,10 +13,10 @@ int main(int argc, char* argv[]) {
     int intervalo = 1;
 
     // Carrega arquivo
-    char * arquivo = "teste";
+    string arquivo("teste");
     ifstream f;
-    f.open(arquivo, ios::in);
+    f.open(arquivo.c_str(), ios::in);
     
-    simulador(f, gerenciador, paginacao, intervalo);
+    simulador(&f, gerenciador, paginacao, intervalo);
     return 0;
 }
