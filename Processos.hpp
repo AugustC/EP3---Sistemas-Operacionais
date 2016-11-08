@@ -1,4 +1,5 @@
 #include<iostream>
+#include<list>
 
 class Processo {
     int base;
@@ -11,7 +12,7 @@ public:
     int indice;
     int limite;
     
-    Processo(int limite, int PID, int * p, int * t){
+    Processo(int limite, int PID, std::list<int> p, std::list<int> t){
         this->limite = limite;
         this->PID = PID;
         this->p = p;
@@ -20,7 +21,10 @@ public:
     }
     
     int pega_endereco() {
-        return (p[indice] + base);
+        int x = p.front();
+        p.pop_front();
+        t.pop_front();
+        return (x + base);
     }
 
     void definir_base(int base) {
@@ -28,13 +32,9 @@ public:
     }
 
     int proximo_tempo() {
-        return t.front;
+        return t.front();
     }
 
-    void elimina_primeiros() {
-        p.erase(p.front);
-        t.erase(t.front);
-    }
 };
 
 // Processo A > B, <=> A.t[ind] > B.t[ind]
