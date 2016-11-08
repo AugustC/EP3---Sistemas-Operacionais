@@ -4,6 +4,8 @@
 #include<fstream>
 #include<boost/dynamic_bitset.hpp>
 #include<cstring>
+#include<sstream>
+#include<string>
 using namespace std;
 
 // Gerencia de espaco livre
@@ -55,21 +57,28 @@ void fechaArquivos(fstream &file1, fstream &file2) {
 }
 
 Processo criaProcesso(string linha, int PID) {
-    int t0 = atoi(std::strtok(linha, " ")); 
-    string nome = std::strtok(NULL, " ");
-    int tf = atoi(std::strtok(NULL, " "));
-    int b = atoi(std::strtok(NULL, " "));
+    
+    std::istringstream linhastream(linha);
+    std::string token;
+    
+    std::getline(linhastream, token, ' ');
+    int t0 = atoi(token.c_str());
+    std::getline(linhastream, token, ' ');
+    string nome = token.c_str();
+    std::getline(linhastream, token, ' ');
+    int tf = atoi(token.c_str());
+    std::getline(linhastream, token, ' ');
+    int b = atoi(token.c_str());
+    
     std::list<int> p, t;
-
     // p_i = -1 significa que o processo nao esta usando a memoria no tempo t_i
     p.push_back(-1);
     t.push_back(t0);
-    linha = std::strtok(NULL, " ");
-    while(linha != NULL) {
-        p.push_back(atoi(linha));
-        linha = std::strtok(NULL, " ");
-        t.push_back(atoi(linha));
-        linha = std::strtok(NULL, " ");
+
+    while(std::getline(linhastream, token, ' ')) {
+        p.push_back(atoi(token.c_str()));
+	std::getline(linhastream, token, ' ');
+        t.push_back(atoi(token.c_str()));
     }
     p.push_back(-1);
     t.push_back(tf);
@@ -82,47 +91,44 @@ Processo criaProcesso(string linha, int PID) {
 void simulador(ifstream arq, int gerenciadorMemoria, int paginacao, int intervalo){
 
     int PID = 0;
-    string linha;
+    std::string linha;
     std::getline(arq, linha);
-    int total = atoi(std::strtok(linha, " "));
-    int virtual_m = atoi(std::strtok(NULL, " "));
-    int s = atoi(std::strtok(NULL, " "));
-    int pag = atoi(std::strtok(NULL, " "));
-    std::list<Processo> lista;
+    std::istringstream linhastream(linha);
+    std::string token;
     
+    std::getline(linhastream, token, ' ');
+    int total = atoi(token.c_str());
+    std::getline(linhastream, token, ' ');
+    int virtual_m = atoi(token.c_str());
+    std::getline(linhastream, token, ' ');
+    int s = atoi(token.c_str());
+    std::getline(linhastream, token, ' ');
+    int pag = atoi(token.c_str());
+ 
     fstream file, file2;
     criaArquivoMem(file, total);
     criaArquivoVir(file2, virtual_m);
     boost::dynamic_bitset<> bitmap_mem(total);
     boost::dynamic_bitset<> bitmap_vir(virtual_m);
-
-    while(linha != NULL) {
+    std::list<Processo> lista;
+    
+    while(std::getline(linhastream, token, ' ')) {
         if (lista.empty()) {
             Processo p = criaProcesso(linha, PID);
             PID++;
         }
         else {
-            int t0 = atoi(std::strtok(linha, " "));
-            while (!lista.empty && t0 > lista.front.proximo_tempo()){
+	    std::istringstream linhastream(linha);
+	    std::string token;
+	    std::getline(linhastream, token, ' ');
+            int t0 = atoi(token.c_str());
+            while (!lista.empty() && t0 > lista.front().proximo_tempo()){
                 // Pega minimo, mexe na memoria
             };
-    }
-
-
-
-
-
-    
-
+	}
+    }	
     // Exemplo
     // bitmap_mem[0] = bitmap_mem[1] = bitmap_mem[5] = bitmap_mem[6] = bitmap_mem[10] = bitmap_mem[13] = 1;
-
-    int endereco = FirstFit(proc.limite, bitmap_mem);
-    // Criar funcao
-    for (int i = endereco; i < endereco + proc.limite; i++)
-        bitmap_mem[i] = 1;
-
-    std::cout << FirstFit(proc.limite, bitmap_mem);    
     
     fechaArquivos(file,file2);
     
