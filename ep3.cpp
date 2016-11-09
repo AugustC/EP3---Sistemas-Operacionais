@@ -1,6 +1,5 @@
 #include<iostream>
 #include<cstdlib>
-#include<boost/dynamic_bitset.hpp>
 #include<list>
 #include<fstream>
 #include "Simulador.cpp"

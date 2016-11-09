@@ -1,6 +1,6 @@
 #include<iostream>
 #include<fstream>
-#include<boost/dynamic_bitset.hpp>
+#include<vector>
 #include<cstring>
 #include<sstream>
 #include<string>
@@ -10,7 +10,7 @@
 using namespace std;
 
 // Gerencia de espaco livre
-int FirstFit(int program_size, boost::dynamic_bitset<> bitmap){
+int FirstFit(int program_size, std::vector<bool> bitmap){
     int size = bitmap.size();
     for (int i = 0; i < size; i++)
         if (!bitmap[i]) {
@@ -59,10 +59,12 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo p){
     int base = p.base;
     int limite = p.limite;
     std::string pid = std::to_string(p.PID);
+    const char * pidchar = pid.c_str();
+    int len = pid.size();
     arquivo_mem.seekp(base);
-
+    
     for (int i = 0; i < limite; i+=pid.size())
-        arquivo_mem.write(pid, pid.size());
+        arquivo_mem.write(pidchar, len);
 }
 
 Processo criaProcesso(string linha, int PID) {
@@ -117,8 +119,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     fstream file, file2;
     criaArquivoMem(file, total);
     criaArquivoVir(file2, virtual_m);
-    boost::dynamic_bitset<> bitmap_mem(total);
-    boost::dynamic_bitset<> bitmap_vir(virtual_m);
+    std::vector<bool> bitmap_mem(total);
+    std::vector<bool> bitmap_vir(virtual_m);
     std::list<Processo> lista;
     
     while(std::getline(*arq, linha)) {
@@ -127,6 +129,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             PID++;
 	    int base = FirstFit(p.limite, bitmap_vir);
 	    p.definir_base(base);
+            escreveArquivoVir(file2, p); // Mudar bitmap
 	    p.pega_endereco(); 	// para deletar o t0
 	    lista.push_back(p);
         }
@@ -142,6 +145,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 	    Processo p = criaProcesso(linha, PID);
 	    int base = FirstFit(p.limite, bitmap_vir);
 	    p.definir_base(base);
+            escreveArquivoVir(file2, p); // Mudar bitmap
 	    p.pega_endereco(); 	// para deletar o t0
 	    std::cout << p.proximo_tempo() <<"\n";
 	    PID++;
