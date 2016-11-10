@@ -3,10 +3,14 @@
 
 CC=g++
 CFLAGS=-std=c++11
+DEPS = Paginas.hpp Processos.hpp Simulador.hpp
+OBJ = ep3.o Simulador.o Processos.o
 
-ep3: ep3.cpp Simulador.hpp
-	$(CC) $(CFLAGS) Simulador.hpp
-	$(CC) $(CFLAGS) -o ep3 ep3.cpp
+%.o: %.cpp $(DEPS)
+	$(CC) -g -c -o  $@ $< $(CFLAGS)
+
+ep3: $(OBJ)
+	$(CC) -o ep3 $^ $(CFLAGS)
 
 clean:
-	rm -f ep3
+	rm -f ep3 *.o
