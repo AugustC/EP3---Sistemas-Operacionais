@@ -54,9 +54,9 @@ void fechaArquivos(fstream &file1, fstream &file2) {
     file1.close();
     file2.close();
 }
-void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> bitmap){
+void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> *bitmap){
 
-    int base = p.base;
+    int base = p.pega_endereco() + 1;
     int limite = p.limite;
     std::string pid = std::to_string(p.PID);
     const char * pidchar = pid.c_str();
@@ -66,10 +66,10 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> bitma
     for (int i = 0; i < limite; i+=pid.size())
         arquivo_mem.write(pidchar, len);
     for (int i = base; i < limite; i++)
-      bitmap[i] = 1;
+        (*bitmap)[i] = 1;
 }
 
-Processo criaProcesso(string linha, int PID) {
+Processo criaProcesso(string linha, int PID, std::vector<bool> bitmap) {
     
     std::istringstream linhastream(linha);
     std::string token;
@@ -97,6 +97,9 @@ Processo criaProcesso(string linha, int PID) {
     t.push_back(tf);
     
     Processo proc = Processo(b, PID, p, t, nome);
+    int base = FirstFit(proc.limite, bitmap);
+    proc.definir_base(base);
+    
     return proc;
 }
 
@@ -127,12 +130,9 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     
     while(std::getline(*arq, linha)) {
         if (lista.empty()) {
-            Processo p = criaProcesso(linha, PID);
+            Processo p = criaProcesso(linha, PID, bitmap_vir);
             PID++;
-	    int base = FirstFit(p.limite, bitmap_vir);
-	    p.definir_base(base);
-            escreveArquivoVir(file2, p, bitmap_vir); // Mudar bitmap
-	    p.pega_endereco(); 	// para deletar o t0
+            escreveArquivoVir(file2, p, &bitmap_vir);
 	    lista.push_back(p);
         }
         else {
@@ -144,21 +144,18 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 // Pega minimo dos processos que estao em execucao, mexe na memoria
 		
             }
-	    Processo p = criaProcesso(linha, PID);
-	    int base = FirstFit(p.limite, bitmap_vir);
-	    p.definir_base(base);
-            escreveArquivoVir(file2, p, bitmap_vir); // Mudar bitmap
-	    p.pega_endereco(); 	// para deletar o t0
-	    std::cout << p.proximo_tempo() <<"\n";
+	    Processo p = criaProcesso(linha, PID, bitmap_vir);
+            escreveArquivoVir(file2, p, &bitmap_vir);
 	    PID++;
 	    lista.push_back(p);
-	    std::cout << "Antes de ordenar\n";
-	    for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
-		std::cout << it->proximo_tempo() << "\n";
-	    lista.sort(compara);
-	    std::cout << "Depois de ordenar\n";
-	    for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
-		std::cout << it->proximo_tempo() << "\n";
+            
+	    // std::cout << "Antes de ordenar\n";
+	    // for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
+	    //     std::cout << it->proximo_tempo() << "\n";
+	    // lista.sort();
+	    // std::cout << "Depois de ordenar\n";
+	    // for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
+	    //     std::cout << it->proximo_tempo() << "\n";
 	}
     }
     
