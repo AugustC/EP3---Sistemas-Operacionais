@@ -54,7 +54,7 @@ void fechaArquivos(fstream &file1, fstream &file2) {
     file1.close();
     file2.close();
 }
-void escreveArquivoVir(fstream &arquivo_mem, Processo p){
+void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> bitmap){
 
     int base = p.base;
     int limite = p.limite;
@@ -65,6 +65,8 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo p){
     
     for (int i = 0; i < limite; i+=pid.size())
         arquivo_mem.write(pidchar, len);
+    for (int i = base; i < limite; i++)
+      bitmap[i] = 1;
 }
 
 Processo criaProcesso(string linha, int PID) {
@@ -129,7 +131,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             PID++;
 	    int base = FirstFit(p.limite, bitmap_vir);
 	    p.definir_base(base);
-            escreveArquivoVir(file2, p); // Mudar bitmap
+            escreveArquivoVir(file2, p, bitmap_vir); // Mudar bitmap
 	    p.pega_endereco(); 	// para deletar o t0
 	    lista.push_back(p);
         }
@@ -145,7 +147,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 	    Processo p = criaProcesso(linha, PID);
 	    int base = FirstFit(p.limite, bitmap_vir);
 	    p.definir_base(base);
-            escreveArquivoVir(file2, p); // Mudar bitmap
+            escreveArquivoVir(file2, p, bitmap_vir); // Mudar bitmap
 	    p.pega_endereco(); 	// para deletar o t0
 	    std::cout << p.proximo_tempo() <<"\n";
 	    PID++;

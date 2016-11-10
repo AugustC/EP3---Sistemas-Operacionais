@@ -2,7 +2,7 @@
 #include<cstdlib>
 #include<list>
 #include<fstream>
-#include "Simulador.cpp"
+#include "Simulador.hpp"
 
 // Prompt
 int main(int argc, char* argv[]) {

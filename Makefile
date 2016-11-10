@@ -4,7 +4,8 @@
 CC=g++
 CFLAGS=-std=c++11
 
-ep3: ep3.cpp
+ep3: ep3.cpp Simulador.hpp
+	$(CC) $(CFLAGS) Simulador.hpp
 	$(CC) $(CFLAGS) -o ep3 ep3.cpp
 
 clean:
