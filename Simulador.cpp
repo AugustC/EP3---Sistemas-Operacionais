@@ -9,8 +9,10 @@
 
 using namespace std;
 
+int last_pos = 0;
+
 // Gerencia de espaco livre
-int FirstFit(int program_size, std::vector<bool> bitmap){
+int FirstFit(int program_size, std::vector<bool> bitmap){ // Representado com o numero 1
     int size = bitmap.size();
     for (int i = 0; i < size; i++)
         if (!bitmap[i]) {
@@ -22,8 +24,24 @@ int FirstFit(int program_size, std::vector<bool> bitmap){
             if (j == program_size)
                 return (i - program_size);
         }
+    return (-1);
 }
-int NextFit();
+
+int NextFit(int program_size, std::vector<bool> bitmap){ // Representado com o numero 2
+    int size = bitmap.size();
+    for (int i = last_pos; i < size; i++)
+        if (!bitmap[i]) {
+            int j;
+            for (j = 0; j < program_size; j++, i++) {
+                if (bitmap[i])
+                    break;
+            }
+            if (j == program_size)
+                return (i - program_size);
+        }
+    return (-1);
+}
+
 int BestFit();
 int WorstFit();
 
@@ -69,7 +87,7 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> *bitm
         (*bitmap)[i] = 1;
 }
 
-Processo criaProcesso(string linha, int PID, std::vector<bool> bitmap) {
+Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, std::vector<bool> bitmap) {
     
     std::istringstream linhastream(linha);
     std::string token;
@@ -97,7 +115,9 @@ Processo criaProcesso(string linha, int PID, std::vector<bool> bitmap) {
     t.push_back(tf);
     
     Processo proc = Processo(b, PID, p, t, nome);
-    int base = FirstFit(proc.limite, bitmap);
+    int base = 0;
+    if (gerenciadorMemoria == 1) base = FirstFit(proc.limite, bitmap); 
+    if (gerenciadorMemoria == 2) base = NextFit(proc.limite, bitmap); 
     proc.definir_base(base);
     
     return proc;
@@ -130,7 +150,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     
     while(std::getline(*arq, linha)) {
         if (lista.empty()) {
-            Processo p = criaProcesso(linha, PID, bitmap_vir);
+            Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             PID++;
             escreveArquivoVir(file2, p, &bitmap_vir);
 	    lista.push_back(p);
@@ -144,8 +164,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 // Pega minimo dos processos que estao em execucao, mexe na memoria
 		
             }
-	    Processo p = criaProcesso(linha, PID, bitmap_vir);
-            escreveArquivoVir(file2, p, &bitmap_vir);
+	    Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
+        escreveArquivoVir(file2, p, &bitmap_vir);
 	    PID++;
 	    lista.push_back(p);
             
