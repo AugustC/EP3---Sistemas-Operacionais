@@ -10,7 +10,9 @@
 using namespace std;
 
 // Gerencia de espaco livre
-int FirstFit(int program_size, std::vector<bool> bitmap){ // Representado com o numero 1
+int FirstFit(int program_size, std::vector<bool> bitmap){ 
+    // Coloca no primeiro lugar que couber o processo
+    // Representado com o numero 1
     int size = bitmap.size();
     for (int i = 0; i < size; i++)
         if (!bitmap[i]) {
@@ -27,8 +29,9 @@ int FirstFit(int program_size, std::vector<bool> bitmap){ // Representado com o 
 
 // Variavel externa para o 
 int last_pos = 0;
-
-int NextFit(int program_size, std::vector<bool> bitmap){ // Representado com o numero 2
+int NextFit(int program_size, std::vector<bool> bitmap){ 
+    // Coloca no primeiro lugar que couber o processo, partindo de onde parou na ultima vez
+    // Representado com o numero 2
     int size = bitmap.size();
     for (int i = last_pos; i < size; i++)
         if (!bitmap[i]) {
@@ -43,8 +46,98 @@ int NextFit(int program_size, std::vector<bool> bitmap){ // Representado com o n
     return (-1);
 }
 
-int BestFit();
-int WorstFit();
+int BestFit(int tamanho_p, std::vector<bool> bitmap){ 
+    // Encontra o menor buraco na memoria onde o processo pode ser encaixado
+    // Representado com o numero 3
+    
+    int tamanho = bitmap.size();
+    int menor, base_menor, j, aux_base;
+
+    // Menor tamanho inicialmente é o maior possivel
+    menor = tamanho + 1;
+
+    // Procurando buracos
+    for (int i = 0; i < tamanho; i++) 
+        
+        // Encontra um buraco
+        if (!bitmap[i]) {
+
+            // Guarda o começo do buraco
+            aux_base = i;
+            
+            // Obtem o tamanho do buraco
+            for (j = i; j < tamanho; j++, i++)
+                if (bitmap[j])
+                    break;
+            
+            // Se processo cabe no buraco
+            if (j >= tamanho_p) {
+                
+                // Caso especial (talvez precise de algo)
+                // if (j == tamanho) {
+                //     base_menor = aux_base;
+                //     return (base_menor);
+                // }
+                
+                // Se o tamanho do buraco for o menor ate agora, atualiza 
+                if (j < menor) {
+                    menor = j;
+                    base_menor = aux_base;
+                }
+
+                // Senão, va em busca de outro buraco
+            }
+        }
+
+    return (base_menor);
+}
+
+int WorstFit(int tamanho_p, std::vector<bool> bitmap){ 
+    // Encontra o maior buraco na memoria onde o processo pode ser encaixado
+    // Representado com o numero 4
+    
+    int tamanho = bitmap.size();
+    int maior, base_maior, j, aux_base;
+
+    // Maior tamanho inicialmente é o menor possivel
+    maior = -1;
+
+    // Procurando buracos
+    for (int i = 0; i < tamanho; i++) 
+        
+        // Encontra um buraco
+        if (!bitmap[i]) {
+
+            // Guarda o começo do buraco
+            aux_base = i;
+            
+            // Obtem o tamanho do buraco
+            for (j = i; j < tamanho; j++, i++)
+                if (bitmap[j])
+                    break;
+            
+            // Se processo cabe no buraco
+            if (j >= tamanho_p) {
+                
+                // Caso especial (talvez precise de algo)
+                // if (j == tamanho) {
+                //     base_maior = aux_base;
+                //     return (base_maior);
+                // }
+                
+                // Se o tamanho do buraco for o maior ate agora, atualiza 
+                if (j > maior) {
+                    maior = j;
+                    base_maior = aux_base;
+                }
+
+                // Senão, va em busca de outro buraco
+            }
+        }
+
+    return (base_maior);
+}
+
 
 // Paginacao
 void Optimal();
@@ -119,6 +212,7 @@ Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, std::vector
     int base = 0;
     if (gerenciadorMemoria == 1) base = FirstFit(proc.limite, bitmap); 
     if (gerenciadorMemoria == 2) base = NextFit(proc.limite, bitmap); 
+    if (gerenciadorMemoria == 3) base = BestFit(proc.limite, bitmap); 
     proc.definir_base(base);
     
     return proc;

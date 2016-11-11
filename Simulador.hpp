@@ -15,8 +15,8 @@ extern int last_pos;
 // Gerencia de espaco livre
 int FirstFit(int program_size, std::vector<bool> bitmap);
 int NextFit(int program_size, std::vector<bool> bitmap);
-int BestFit();
-int WorstFit();
+int BestFit(int tamanho_p, std::vector<bool> bitmap);
+int WorstFit(int tamanho_p, std::vector<bool> bitmap);
 
 // Paginacao
 void Optimal();
