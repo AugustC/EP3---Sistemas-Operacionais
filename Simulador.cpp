@@ -9,8 +9,6 @@
 
 using namespace std;
 
-int last_pos = 0;
-
 // Gerencia de espaco livre
 int FirstFit(int program_size, std::vector<bool> bitmap){ // Representado com o numero 1
     int size = bitmap.size();
@@ -26,6 +24,9 @@ int FirstFit(int program_size, std::vector<bool> bitmap){ // Representado com o 
         }
     return (-1);
 }
+
+// Variavel externa para o 
+int last_pos = 0;
 
 int NextFit(int program_size, std::vector<bool> bitmap){ // Representado com o numero 2
     int size = bitmap.size();

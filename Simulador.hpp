@@ -9,6 +9,9 @@
 
 using namespace std;
 
+// Variavel global
+extern int last_pos;
+
 // Gerencia de espaco livre
 int FirstFit(int program_size, std::vector<bool> bitmap);
 int NextFit(int program_size, std::vector<bool> bitmap);

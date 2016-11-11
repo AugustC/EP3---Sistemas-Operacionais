@@ -7,7 +7,7 @@
 // Prompt
 int main(int argc, char* argv[]) {
 
-    int gerenciador = 1;
+    int gerenciador = 2;
     int paginacao = 1;
     int intervalo = 1;
 
