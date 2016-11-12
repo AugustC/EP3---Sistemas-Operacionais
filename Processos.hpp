@@ -18,6 +18,7 @@ public:
     int pega_endereco();
     std::string getPID();
     int proximo_tempo() const;
+    bool p_empty();
     bool operator<(Processo b) const;
 };
 

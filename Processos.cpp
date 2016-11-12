@@ -26,9 +26,13 @@ int Processo::proximo_tempo() const {
 }
 
 bool Processo::operator<(Processo b) const {
-    return proximo_tempo() > b.proximo_tempo();
+    return proximo_tempo() < b.proximo_tempo();
 }  
 
 std::string Processo::getPID() {
     return std::to_string(PID);
+}
+
+bool Processo::p_empty() {
+    return p.empty();
 }
