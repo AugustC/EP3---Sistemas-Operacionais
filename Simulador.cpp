@@ -117,8 +117,8 @@ int WorstFit(int tamanho_p, std::vector<bool> bitmap){
             aux_base = i;
             
             // Obtem o tamanho do buraco
-            for (j = i; j < tamanho; j++, i++)
-                if (bitmap[j])
+            for (j = 0; j < tamanho; j++, i++)
+                if (bitmap[i])
                     break;
             
             // Se processo cabe no buraco
@@ -236,7 +236,8 @@ Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, std::vector
     int base = 0;
     if (gerenciadorMemoria == 1) base = FirstFit(proc.limite, bitmap); 
     if (gerenciadorMemoria == 2) base = NextFit(proc.limite, bitmap); 
-    if (gerenciadorMemoria == 3) base = BestFit(proc.limite, bitmap); 
+    if (gerenciadorMemoria == 3) base = BestFit(proc.limite, bitmap);
+    if (gerenciadorMemoria == 4) base = WorstFit(proc.limite, bitmap);
     proc.definir_base(base);
     
     return proc;
