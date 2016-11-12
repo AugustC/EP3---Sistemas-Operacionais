@@ -10,40 +10,40 @@
 using namespace std;
 
 // Gerencia de espaco livre
-int FirstFit(int program_size, std::vector<bool> bitmap){ 
+int FirstFit(int tamanho_p, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo
     // Representado com o numero 1
-    int size = bitmap.size();
-    for (int i = 0; i < size; i++)
+    int tamanho_b = bitmap.size();
+    for (int i = 0; i < tamanho_b; i++)
         if (!bitmap[i]) {
             int j;
-            for (j = 0; j < program_size; j++, i++) {
+            for (j = 0; j < tamanho_p; j++, i++) {
                 if (bitmap[i])
                     break;
             }
-            if (j == program_size)
-                return (i - program_size);
+            if (j == tamanho_p)
+                return (i - tamanho_p);
         }
     return (-1);
 }
 
 // Variavel externa para o 
 
-int NextFit(int program_size, std::vector<bool> bitmap){ 
+int NextFit(int tamanho_p, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo, partindo de onde parou na ultima vez
     // Representado com o numero 2
     static int last_pos = 0;
-    int size = bitmap.size();
-    for (int i = 0; i < size; i++)
-        if (!bitmap[(i + last_pos) % size]) {
+    int tamanho_b = bitmap.size();
+    for (int i = 0; i < tamanho_b; i++)
+        if (!bitmap[(i + last_pos) % tamanho_b]) {
             int j;
-            for (j = 0; j < program_size; j++, i++) {
-                if (bitmap[(i + last_pos) % size])
+            for (j = 0; j < tamanho_p; j++, i++) {
+                if (bitmap[(i + last_pos) % tamanho_b])
                     break;
             }
-            if (j == program_size) {
+            if (j == tamanho_p) {
                 last_pos = i;
-                return (i - program_size);
+                return (i - tamanho_p);
             }
         }
     return (-1);
@@ -88,7 +88,6 @@ int BestFit(int tamanho_p, std::vector<bool> bitmap){
                     base_menor = aux_base;
                 }
 
-                // Senão, va em busca de outro buraco
             }
         }
 
@@ -149,6 +148,11 @@ void Clock();
 void LRU();
 
 // Etc
+void imprimeBitmap(std::vector<bool> bitmap){
+    for (int i = 0; i < bitmap.size(); i++)
+        std::cout << bitmap[i];
+    std::cout << "\n";
+}
 void zeraR();
 void copiaMem_Vir();
 void copiaVir_Mem();
@@ -169,19 +173,32 @@ void fechaArquivos(fstream &file1, fstream &file2) {
     file1.close();
     file2.close();
 }
-void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> *bitmap){
+void escreveArquivoVir(fstream &arquivo_mem, Processo *p, std::vector<bool> *bitmap){
 
-    int base = p.pega_endereco() + 1;
-    int limite = p.limite;
-    std::string pid = std::to_string(p.PID);
+    int base = p->pega_endereco() + 1;
+    int limite = p->limite;
+    std::string pid = p->getPID();
     const char * pidchar = pid.c_str();
     int len = pid.size();
     arquivo_mem.seekp(base);
     
-    for (int i = 0; i < limite; i+=pid.size())
+    for (int i = 0; i < limite; i+=len)
         arquivo_mem.write(pidchar, len);
-    for (int i = base; i < limite; i++)
-        (*bitmap)[i] = 1;
+    for (int i = 0; i < limite; i++)
+        (*bitmap)[i + base] = 1;
+}
+void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, std::vector<bool> *bitmap) {
+
+    int limite = p.limite;
+    std::string pid = p.getPID();
+    int len = pid.size();
+    arquivo.seekp(base);
+
+    for (int i = 0; i < limite; i += 2) {
+        arquivo.write("-1", 2);
+    }
+    for (int i = 0; i < limite; i++)
+        (*bitmap)[i + base] = 0;
 }
 
 Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, std::vector<bool> bitmap) {
@@ -221,7 +238,6 @@ Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, std::vector
     return proc;
 }
 
-
 void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int intervalo){
 
     int PID = 0;
@@ -239,9 +255,9 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     std::getline(linhastream, token, ' ');
     int pag = atoi(token.c_str());
  
-    fstream file, file2;
-    criaArquivoMem(file, total);
-    criaArquivoVir(file2, virtual_m);
+    fstream arquivo_fis, arquivo_vir;
+    criaArquivoMem(arquivo_fis, total);
+    criaArquivoVir(arquivo_vir, virtual_m);
     std::vector<bool> bitmap_mem(total);
     std::vector<bool> bitmap_vir(virtual_m);
     std::list<Processo> lista;
@@ -250,22 +266,42 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
         if (lista.empty()) {
             Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             PID++;
-            escreveArquivoVir(file2, p, &bitmap_vir);
+            escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
+            imprimeBitmap(bitmap_vir);
 	    lista.push_back(p);
         }
         else {
-	    std::istringstream linhastream(linha);
+
+            std::istringstream linhastream(linha);
 	    std::string token;
 	    std::getline(linhastream, token, ' ');
             int t0 = atoi(token.c_str());
+            
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
                 // Pega minimo dos processos que estao em execucao, mexe na memoria
-		
+
+                Processo proc = lista.front();
+		int p = proc.pega_endereco();
+                
+                if (proc.p_empty()) {
+                    // Se o processo acabou neste tempo
+                    deletaProcessoArquivo(arquivo_vir, proc, p + 1, &bitmap_vir);
+                    imprimeBitmap(bitmap_vir);
+                    lista.pop_front();
+                    lista.sort();
+                }
+                else {
+                    // Paginacao
+                    
+                    lista.sort();
+                }
             }
 	    Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
-        escreveArquivoVir(file2, p, &bitmap_vir);
+            escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
+            imprimeBitmap(bitmap_vir);
 	    PID++;
 	    lista.push_back(p);
+            lista.sort();
             
 	    // std::cout << "Antes de ordenar\n";
 	    // for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
@@ -277,6 +313,6 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 	}
     }
     
-    fechaArquivos(file,file2);
+    fechaArquivos(arquivo_fis,arquivo_vir);
     
 }
