@@ -27,11 +27,13 @@ int FirstFit(int tamanho_p, std::vector<bool> bitmap){
     return (-1);
 }
 
+int last_pos = 0;
+
 int NextFit(int tamanho_p, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo, partindo de onde parou na ultima vez
     // Representado com o numero 2
-    static int last_pos = 0;
     int tamanho_b = bitmap.size();
+    
     for (int i = 0; i < tamanho_b; i++)
         if (!bitmap[(i + last_pos) % tamanho_b]) {
             int j;
@@ -40,10 +42,13 @@ int NextFit(int tamanho_p, std::vector<bool> bitmap){
                     break;
             }
             if (j == tamanho_p) {
-                last_pos = i;
-                return (i - tamanho_p);
+                last_pos = (i + last_pos) % tamanho_b;
+                if ((last_pos - tamanho_p) < 0)
+                    return tamanho_b + (last_pos - tamanho_p);
+                return (last_pos - tamanho_p);
             }
         }
+    
     return (-1);
 }
 
@@ -178,12 +183,13 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo *p, std::vector<bool> *bit
     std::string pid = p->getPID();
     const char * pidchar = pid.c_str();
     int len = pid.size();
+    int tamanho_b = (*bitmap).size();
     arquivo_mem.seekp(base);
     
     for (int i = 0; i < limite; i+=len)
         arquivo_mem.write(pidchar, len);
     for (int i = 0; i < limite; i++)
-        (*bitmap)[i + base] = 1;
+        (*bitmap)[(i + base) % tamanho_b] = 1;
 }
 void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, std::vector<bool> *bitmap) {
 
