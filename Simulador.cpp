@@ -28,20 +28,23 @@ int FirstFit(int program_size, std::vector<bool> bitmap){
 }
 
 // Variavel externa para o 
-int last_pos = 0;
+
 int NextFit(int program_size, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo, partindo de onde parou na ultima vez
     // Representado com o numero 2
+    static int last_pos = 0;
     int size = bitmap.size();
-    for (int i = last_pos; i < size; i++)
-        if (!bitmap[i]) {
+    for (int i = 0; i < size; i++)
+        if (!bitmap[(i + last_pos) % size]) {
             int j;
             for (j = 0; j < program_size; j++, i++) {
-                if (bitmap[i])
+                if (bitmap[(i + last_pos) % size])
                     break;
             }
-            if (j == program_size)
+            if (j == program_size) {
+                last_pos = i;
                 return (i - program_size);
+            }
         }
     return (-1);
 }
