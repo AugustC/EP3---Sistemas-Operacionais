@@ -27,8 +27,6 @@ int FirstFit(int tamanho_p, std::vector<bool> bitmap){
     return (-1);
 }
 
-// Variavel externa para o 
-
 int NextFit(int tamanho_p, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo, partindo de onde parou na ultima vez
     // Representado com o numero 2
@@ -69,8 +67,8 @@ int BestFit(int tamanho_p, std::vector<bool> bitmap){
             aux_base = i;
             
             // Obtem o tamanho do buraco
-            for (j = i; j < tamanho; j++, i++)
-                if (bitmap[j])
+            for (j = 0; i < tamanho; j++, i++)
+                if (bitmap[i])
                     break;
             
             // Se processo cabe no buraco
