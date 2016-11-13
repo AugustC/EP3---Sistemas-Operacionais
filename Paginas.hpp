@@ -3,6 +3,6 @@
 class Pagina {
     bool R;
     bool M;
-    bool present_ausent;
+    bool present ;
     int endereco;
 };
