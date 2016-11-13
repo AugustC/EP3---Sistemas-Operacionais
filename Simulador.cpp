@@ -1,5 +1,6 @@
 #include<iostream>
 #include<fstream>
+#include<algorithm>
 #include<vector>
 #include<cstring>
 #include<sstream>
@@ -262,18 +263,21 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     fstream arquivo_fis, arquivo_vir;
     criaArquivoMem(arquivo_fis, total);
     criaArquivoVir(arquivo_vir, virtual_m);
-    std::vector<bool> bitmap_mem(total);
+    int quant_maxima = total/pag; // Quantidade de paginas que cabem na memoria fisica
+    std::vector<bool> bitmap_mem(quant_maxima);
     std::vector<bool> bitmap_vir(virtual_m);
     std::list<Processo> lista;
+    std::vector<Pagina> tabela;
     
     while(std::getline(*arq, linha)) {
+        
         if (lista.empty()) {
             Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             PID++;
             escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
-            imprimeBitmap(bitmap_vir);
 	    lista.push_back(p);
         }
+        
         else {
 
             std::istringstream linhastream(linha);
@@ -289,12 +293,20 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 if (lista.front().p_empty()) {
                     // Se o processo acabou neste tempo
                     deletaProcessoArquivo(arquivo_vir, lista.front(), p + 1, &bitmap_vir);
-                    imprimeBitmap(bitmap_vir);
                     lista.pop_front();
                     lista.sort();
                 }
+                
                 else {
-                    // Paginacao
+                    // Paginacao    
+                    if (bitmap_mem.end() != std::find(bitmap_mem.begin(), bitmap_mem.end(), false)) {
+                        // Tem algum espaco livre na memoria fisica
+                        
+                    }
+                    else {
+                        // Algoritmo de Paginacao
+                        
+                    }
 
                     lista.sort();
                 }
@@ -306,14 +318,6 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             PID++;
             lista.push_back(p);
             lista.sort();
-            
-	    // std::cout << "Antes de ordenar\n";
-	    // for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
-	    //     std::cout << it->proximo_tempo() << "\n";
-	    // lista.sort();
-	    // std::cout << "Depois de ordenar\n";
-	    // for (std::list<Processo>::iterator it=lista.begin(); it != lista.end(); ++it)
-	    //     std::cout << it->proximo_tempo() << "\n";
 	}
     }
     
