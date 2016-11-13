@@ -162,15 +162,23 @@ void copiaVir_Mem();
 void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
-    for (int i = 0; i < total; i+=2)
-        arquivo_mem.write("-1", 2);
+    
+    for (int i = 0; i < total; i+=2) {
+        arquivo_mem.write("-", 1);
+        if ((i+1) != total)
+            arquivo_mem.write("1", 1);
+    }
 
 }
 void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
-    for (int i = 0; i < virtual_m; i+=2)
-        arquivo_vir.write("-1", 2);
+    
+    for (int i = 0; i < virtual_m; i+=2) {
+        arquivo_vir.write("-", 1);
+        if ((i+1) != virtual_m)
+            arquivo_vir.write("1", 1);
+    }
 }
 void fechaArquivos(fstream &file1, fstream &file2) {
     file1.close();
@@ -199,8 +207,11 @@ void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, std::vector<b
     arquivo.seekp(base);
 
     for (int i = 0; i < limite; i += 2) {
-        arquivo.write("-1", 2);
+        arquivo.write("-", 1);
+        if ((i+1) != limite)
+            arquivo.write("1", 1);
     }
+
     for (int i = 0; i < limite; i++)
         (*bitmap)[i + base] = 0;
 }
