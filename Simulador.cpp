@@ -278,15 +278,15 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
         else {
 
             std::istringstream linhastream(linha);
-	    std::string token;
-	    std::getline(linhastream, token, ' ');
+	        std::string token;
+	        std::getline(linhastream, token, ' ');
             int t0 = atoi(token.c_str());
             
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
                 // Pega minimo dos processos que estao em execucao, mexe na memoria
 
                 Processo proc = lista.front();
-		int p = proc.pega_endereco();
+                int p = proc.pega_endereco();
                 
                 if (proc.p_empty()) {
                     // Se o processo acabou neste tempo
@@ -301,11 +301,12 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                     lista.sort();
                 }
             }
-	    Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
+            
+            Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
             imprimeBitmap(bitmap_vir);
-	    PID++;
-	    lista.push_back(p);
+            PID++;
+            lista.push_back(p);
             lista.sort();
             
 	    // std::cout << "Antes de ordenar\n";
