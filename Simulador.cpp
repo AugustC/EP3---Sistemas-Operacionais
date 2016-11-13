@@ -5,6 +5,7 @@
 #include<cstring>
 #include<sstream>
 #include<string>
+#include<math.h>
 #include "Processos.hpp"
 #include "Paginas.hpp"
 
@@ -145,7 +146,7 @@ int WorstFit(int tamanho_p, std::vector<bool> bitmap){
 
 
 // Paginacao
-void Optimal();
+void Optimal(std::vector<Pagina> tabela, int p, ofstream &arquivo);
 void SecondChance();
 void Clock();
 void LRU();
@@ -198,9 +199,8 @@ void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, std::vector<b
     int len = pid.size();
     arquivo.seekp(base);
 
-    for (int i = 0; i < limite; i += 2) {
+    for (int i = 0; i < limite; i += 2)
         arquivo.write("-1", 2);
-    }
     for (int i = 0; i < limite; i++)
         (*bitmap)[i + base] = 0;
 }
@@ -304,8 +304,13 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         
                     }
                     else {
-                        // Algoritmo de Paginacao
-                        
+                        if (!tabela[floor(p / pag)].present) {
+                            // Paginacao
+                            if (paginacao == 1) Optimal(tabela, p, arquivo_fis);
+                            else if (paginacao == 2) SecondChance();
+                            else if (paginacao == 3) Clock();
+                            else if (paginacao == 4) LRU();
+                        }
                     }
 
                     lista.sort();
