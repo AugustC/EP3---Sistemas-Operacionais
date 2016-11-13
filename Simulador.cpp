@@ -27,12 +27,11 @@ int FirstFit(int tamanho_p, std::vector<bool> bitmap){
     return (-1);
 }
 
-int last_pos = 0;
-
 int NextFit(int tamanho_p, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo, partindo de onde parou na ultima vez
     // Representado com o numero 2
     int tamanho_b = bitmap.size();
+    static int last_pos = 0;
     
     for (int i = 0; i < tamanho_b; i++)
         if (!bitmap[(i + last_pos) % tamanho_b]) {
@@ -235,9 +234,9 @@ Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, std::vector
     Processo proc = Processo(b, PID, p, t, nome);
     int base = 0;
     if (gerenciadorMemoria == 1) base = FirstFit(proc.limite, bitmap); 
-    if (gerenciadorMemoria == 2) base = NextFit(proc.limite, bitmap); 
-    if (gerenciadorMemoria == 3) base = BestFit(proc.limite, bitmap);
-    if (gerenciadorMemoria == 4) base = WorstFit(proc.limite, bitmap);
+    else if (gerenciadorMemoria == 2) base = NextFit(proc.limite, bitmap); 
+    else if (gerenciadorMemoria == 3) base = BestFit(proc.limite, bitmap);
+    else if (gerenciadorMemoria == 4) base = WorstFit(proc.limite, bitmap);
     proc.definir_base(base);
     
     return proc;
@@ -278,26 +277,25 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
         else {
 
             std::istringstream linhastream(linha);
-	        std::string token;
-	        std::getline(linhastream, token, ' ');
+            std::string token;
+            std::getline(linhastream, token, ' ');
             int t0 = atoi(token.c_str());
             
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
                 // Pega minimo dos processos que estao em execucao, mexe na memoria
 
-                Processo proc = lista.front();
-                int p = proc.pega_endereco();
+                int p = lista.front().pega_endereco();
                 
-                if (proc.p_empty()) {
+                if (lista.front().p_empty()) {
                     // Se o processo acabou neste tempo
-                    deletaProcessoArquivo(arquivo_vir, proc, p + 1, &bitmap_vir);
+                    deletaProcessoArquivo(arquivo_vir, lista.front(), p + 1, &bitmap_vir);
                     imprimeBitmap(bitmap_vir);
                     lista.pop_front();
                     lista.sort();
                 }
                 else {
                     // Paginacao
-                    
+
                     lista.sort();
                 }
             }
