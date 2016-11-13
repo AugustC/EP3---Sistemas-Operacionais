@@ -12,11 +12,11 @@ using namespace std;
 // Prompt
 int main(int argc, char* argv[]) {
 
-    int gerenciador;
-    int paginacao = 1;
-    int intervalo = 1;
+    int gerenciador = -1;
+    int paginacao = -1;
+    int intervalo = -1;
 
-    string token, linha, entrada;
+    string token, linha, entrada, arquivo;
     ifstream f;
 
     while (1) {
@@ -33,12 +33,17 @@ int main(int argc, char* argv[]) {
         if (token == "carrega") {
 			
             getline(linhastream, token, ' ');
-            // carrega arquivo
-            string arquivo(token);
-            f.open(arquivo.c_str(), ios::in);	
-        }	    
+
+            // trata erro do arquivo
+            f.open(token.c_str(), ios::in);
+            if (!f)
+    	        cout << "Problema ao abrir o arquivo. Carregue novamente." << endl;
+    	    f.close();
+
+    	    arquivo = token;
+        }	
 	    
-        else if (token == "espaco"){
+        else if (token == "espaco") {
 	    	
             getline(linhastream, token, ' ');
             gerenciador = atoi(token.c_str());
@@ -52,9 +57,12 @@ int main(int argc, char* argv[]) {
 
         else if (token == "executa") {
 	    	
+        	f.open(arquivo.c_str(), ios::in); // caso o usuario queira rodar de novo, nao precisa carregar outra vez
             getline(linhastream, token, ' ');
             intervalo = atoi(token.c_str());
             simulador(&f, gerenciador, paginacao, intervalo);
+            f.close();
+           
         }
 
         else if (token == "sai")
