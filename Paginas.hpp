@@ -10,4 +10,5 @@ public:
     int numero_fis;
     
     Pagina();
+    bool operator == (const Pagina &p);
 };

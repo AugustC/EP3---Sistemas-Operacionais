@@ -6,3 +6,7 @@ Pagina::Pagina(){
     M = false;
     present = false;
 }
+
+bool Pagina::operator == (const Pagina &p) {
+    return (p.numero_tabela == numero_tabela);
+}
