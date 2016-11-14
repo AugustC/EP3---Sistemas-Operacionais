@@ -12,11 +12,12 @@ using namespace std;
 // Prompt
 int main(int argc, char* argv[]) {
 
-    int gerenciador = -1;
-    int paginacao = -1;
+    int gerenciador = 1;
+    int paginacao = 1;
     int intervalo = -1;
-
+    
     string token, linha, entrada, arquivo;
+    arquivo = "teste2";
     ifstream f;
 
     while (1) {
@@ -57,7 +58,7 @@ int main(int argc, char* argv[]) {
 
         else if (token == "executa") {
 	    	
-        	f.open(arquivo.c_str(), ios::in); // caso o usuario queira rodar de novo, nao precisa carregar outra vez
+            f.open(arquivo.c_str(), ios::in); // caso o usuario queira rodar de novo, nao precisa carregar outra vez
             getline(linhastream, token, ' ');
             intervalo = atoi(token.c_str());
             simulador(&f, gerenciador, paginacao, intervalo);
