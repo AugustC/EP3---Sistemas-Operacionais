@@ -1,8 +1,10 @@
 #include<iostream>
 
 class Pagina {
-    bool R;
-    bool M;
-    bool present ;
-    int endereco;
+
+public:
+    bool R = false;
+    bool M = false;
+    bool present;
+    
 };
