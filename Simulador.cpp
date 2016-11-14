@@ -229,25 +229,28 @@ int WorstFit(int tamanho_p, std::vector<bool> bitmap){
     return (base_maior);
 }
 
+void trocaPaginaTabela(std::vector<Pagina> *tabela, int ind_pagina_anterior, int ind_pagina_nova, int endereco) {
+    (*tabela)[ind_pagina_anterior].present = false;
+    (*tabela)[ind_pagina_nova].present = true;
+    (*tabela)[ind_pagina_nova].R = true;
+    (*tabela)[ind_pagina_nova].numero_fis = endereco;   
+}
 
 // Paginacao
-void Optimal(std::vector<Pagina> *tabela, int p, fstream &arquivo, std::vector<int> tempo_futuro, Processo proc, int pag, std::vector<int> ant_tabela){
-    std::vector<int>::iterator maximo = std::max_element(tempo_futuro.begin(), tempo_futuro.end());
-    int indice = std::distance(tempo_futuro.begin(), maximo);
+void Optimal(std::vector<int> *tempo_futuro, std::vector<Pagina> *tabela, int p, fstream &arquivo, Processo proc, int pag, std::vector<int> ant_tabela){
+    std::vector<int>::iterator maximo = std::max_element((*tempo_futuro).begin(), (*tempo_futuro).end());
+    int indice = std::distance((*tempo_futuro).begin(), maximo);
 
     std::cout << "Quadro de pagina " << indice << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
     
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
-    (*tabela)[ant_tabela[indice]].present = false;
-    (*tabela)[p].present = true;
-    (*tabela)[p].R = true;
-    (*tabela)[p].numero_fis = indice;
+    trocaPaginaTabela(tabela, ant_tabela[indice], p, indice);
     
-    tempo_futuro[indice] = 999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
+    (*tempo_futuro)[indice] = 999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
     std::list<int>::const_iterator iteradorT, iteradorP;
     for (iteradorT = proc.t.begin(), iteradorP = proc.p.begin(); iteradorT != proc.t.end(); ++iteradorT, ++iteradorP)
         if (pag * p <= *iteradorP + proc.base && *iteradorP + proc.base < pag * (p + 1)) {
-            tempo_futuro[indice] = *iteradorT;
+            (*tempo_futuro)[indice] = *iteradorT;
             break;
         }
     
@@ -269,10 +272,7 @@ void SecondChance(std::list<Pagina> *fila, std::vector<Pagina> *tabela, int p, f
     int endereco_fisico = fila->front().numero_fis;
     int pagina_anterior = fila->front().numero_tabela;
 
-    (*tabela)[pagina_anterior].present = false;
-    (*tabela)[p].present = true;
-    (*tabela)[p].R = true;
-    (*tabela)[p].numero_fis = endereco_fisico;
+    trocaPaginaTabela(tabela, pagina_anterior, p, endereco_fisico);
 
     escreveArquivoMem(arquivo, endereco_fisico, proc, pag);
     
@@ -280,9 +280,30 @@ void SecondChance(std::list<Pagina> *fila, std::vector<Pagina> *tabela, int p, f
     fila->push_back((*tabela)[p]);
     return;
 }
-void Clock(){
+
+void Clock(std::vector<Pagina> *relogio, std::vector<Pagina> *tabela, int p, fstream &arquivo, Processo proc, int pag){
+    static int i = 0;
+    int tam = relogio->size();
+    
+    while((*relogio)[i].R) {
+        (*relogio)[i].R = false;
+        i = (i + 1) % tam;
+    }
+
+    std::cout << "Quadro de pagina " << (*relogio)[i].numero_fis << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
+
+    int endereco_fisico = (*relogio)[i].numero_fis;
+    int pagina_anterior = (*relogio)[i].numero_tabela;
+
+    trocaPaginaTabela(tabela, pagina_anterior, p, endereco_fisico);
+
+    escreveArquivoMem(arquivo, endereco_fisico, proc, pag);
+
+    (*relogio)[i] = (*tabela)[p];
+    
     return;
 }
+
 void LRU(){
     return;
 }
@@ -372,6 +393,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     std::vector<int> tempo_futuro(quant_maxima_fis);
     std::vector<int> ant_tabela(quant_maxima_fis);
     std::list<Pagina> fila;
+    std::vector<Pagina> relogio;
     
     while(std::getline(*arq, linha)) {
         
@@ -403,6 +425,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             bitmap_mem[tabela[floor(i/pag)].numero_fis] = false;
                             tempo_futuro[tabela[floor(i/pag)].numero_fis] = 999999; // Optimal
                             fila.remove(tabela[floor(i/pag)]); // Second-chance
+                            relogio.erase(std::find(relogio.begin(), relogio.end(), tabela[floor(i/pag)])); // Clock
                         }
                     
                     lista.pop_front();
@@ -421,7 +444,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             bitmap_mem[ind] = true;
                             ant_tabela[ind] = pagina;
                             tabela[pagina].numero_fis = ind;
-                            tabela[floor(pi/pag)].present = true;
+                            tabela[pagina].present = true;
 
                             // Optimal
                             if (paginacao == 1) {
@@ -436,8 +459,13 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             }
                             
                             // Second-chance
-                            else {
+                            else if (paginacao == 2) {
                                 fila.push_back(tabela[pagina]);
+                            }
+
+                            // Clock
+                            else if (paginacao == 3) {
+                                relogio.insert(relogio.end(), tabela[pagina]);
                             }
                             
                             std::cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << pi << ".";
@@ -446,9 +474,9 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         }
                         else {
                             // Paginacao
-                            if (paginacao == 1) Optimal(&tabela, floor(pi / pag), arquivo_fis, tempo_futuro, lista.front(), pag, ant_tabela);
-                            else if (paginacao == 2) SecondChance(&fila, &tabela, floor(pi / pag), arquivo_fis, lista.front(), pag);
-                            else if (paginacao == 3) Clock();
+                            if (paginacao == 1)      Optimal(&tempo_futuro, &tabela, pagina, arquivo_fis, lista.front(), pag, ant_tabela);
+                            else if (paginacao == 2) SecondChance(&fila, &tabela, pagina, arquivo_fis, lista.front(), pag);
+                            else if (paginacao == 3) Clock(&relogio, &tabela, pagina, arquivo_fis, lista.front(), pag);
                             else if (paginacao == 4) LRU();
                         }
                     }
