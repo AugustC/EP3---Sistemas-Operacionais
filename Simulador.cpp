@@ -85,16 +85,13 @@ void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, std::vector
         else
             arquivo_mem.write(pidchar, len);
     }
-
-    // bitmap
-    for (int i = 0; i < pag; i++)
-        (*bitmap)[(i + endereco_ini) % tamanho_b] = 1;
 }
 std::vector<Pagina> criaTabela(int quant_paginas){
     // Cria a tabela de paginas
     std::vector<Pagina> tabela(quant_paginas);
     for (int i = 0; i < tabela.size(); i++) {
         Pagina pag = Pagina();
+        pag.numero_tabela = i;
         tabela[i] = pag;
     }
     return tabela;
@@ -235,16 +232,28 @@ int WorstFit(int tamanho_p, std::vector<bool> bitmap){
 
 
 // Paginacao
-void Optimal(std::vector<Pagina> tabela, int p, fstream &arquivo, std::vector<int> tempo_futuro, Processo proc, std::vector<bool> *bitmap, int pag){
+void Optimal(std::vector<Pagina> tabela, int p, fstream &arquivo, std::vector<int> tempo_futuro, Processo proc, std::vector<bool> *bitmap, int pag, std::vector<int> ant_tabela){
     std::vector<int>::iterator maximo = std::max_element(tempo_futuro.begin(), tempo_futuro.end());
     int indice = std::distance(tempo_futuro.begin(), maximo);
 
-    std::cout << "Pagina " << indice << " foi trocada. Processo " << proc.getPID() << " utilizou a memoria " << p << "\n";
+    std::cout << "Quadro de pagina " << indice << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
     
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
-    tabela[indice].present = false;
+    tabela[ant_tabela[indice]].present = false;
     tabela[p].present = true;
     tabela[p].R = true;
+    tabela[p].numero_fis = indice;
+    
+    tempo_futuro[indice] = 999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
+    std::list<int>::const_iterator iteradorT, iteradorP;
+    for (iteradorT = proc.t.begin(), iteradorP = proc.p.begin(); iteradorT != proc.t.end(); ++iteradorT, ++iteradorP)
+        if (pag * p <= *iteradorP + proc.base && *iteradorP + proc.base < pag * (p + 1)) {
+            tempo_futuro[indice] = *iteradorT;
+            break;
+        }
+    for (int i = 0; i < tempo_futuro.size(); i++)
+        std::cout << tempo_futuro[i] << " ";
+    std::cout << "\n";      
     
     escreveArquivoMem(arquivo, indice, proc, bitmap, pag);
     
@@ -337,12 +346,14 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     fstream arquivo_fis, arquivo_vir;
     criaArquivoMem(arquivo_fis, total);
     criaArquivoVir(arquivo_vir, virtual_m);
-    int quant_maxima = total/pag; // Quantidade de paginas que cabem na memoria fisica
-    std::vector<bool> bitmap_mem(quant_maxima);
+    int quant_maxima_vir = virtual_m/pag; // Quantidade de paginas que cabem na memoria virtual
+    int quant_maxima_fis = total/pag;
+    std::vector<bool> bitmap_mem(quant_maxima_fis);
     std::vector<bool> bitmap_vir(virtual_m);
     std::list<Processo> lista;
-    std::vector<Pagina> tabela = criaTabela(quant_maxima);
-    std::vector<int> tempo_futuro(quant_maxima);
+    std::vector<Pagina> tabela = criaTabela(quant_maxima_vir);
+    std::vector<int> tempo_futuro(quant_maxima_fis);
+    std::vector<int> ant_tabela(quant_maxima_fis);
     
     while(std::getline(*arq, linha)) {
         
@@ -362,51 +373,84 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
                 // Pega minimo dos processos que estao em execucao, mexe na memoria
-
-                int p = lista.front().pega_endereco();
+                
+                int pi = lista.front().pega_endereco();
                 
                 if (lista.front().p_empty()) {
                     // Se o processo acabou neste tempo
-                    deletaProcessoArquivo(arquivo_vir, lista.front(), p + 1, &bitmap_vir);
+                    deletaProcessoArquivo(arquivo_vir, lista.front(), pi + 1, &bitmap_vir);
+                    
+                    for (int i = lista.front().base; i < lista.front().base + lista.front().limite; i++)
+                        if (tabela[floor(i/ pag)].present) {
+                            tempo_futuro[tabela[floor(i/pag)].numero_fis] = 999999;
+                            bitmap_mem[tabela[floor(i/pag)].numero_fis] = false;
+                        }
+
                     lista.pop_front();
                     lista.sort();
                 }
                 
                 else {
                     // Paginacao
-                    auto livre = std::find(bitmap_mem.begin(), bitmap_mem.end(), false);
-                    if (livre != bitmap_mem.end()) {
-                        // Tem algum espaco livre na memoria fisica
-                        int ind = std::distance(bitmap_mem.begin(), livre);
-                        bitmap_mem[ind] = true;
-                        if (paginacao == 1) {
-                            // Adiciona proximo tempo ao vetor tempo_futuro
+                    int pagina = floor(pi / pag);
+                    if (!tabela[pagina].present) {
+                        auto livre = std::find(bitmap_mem.begin(), bitmap_mem.end(), false);
+                        
+                        if (livre != bitmap_mem.end()) {
+                            // Tem algum espaco livre na memoria fisica
+                            int ind = std::distance(bitmap_mem.begin(), livre);
+                            bitmap_mem[ind] = true;
+                            ant_tabela[ind] = pagina;
+                            tabela[pagina].numero_fis = ind;
+                            
+                            if (paginacao == 1) {
+                                // Adiciona proximo tempo ao vetor tempo_futuro
+                                std::list<int>::const_iterator iteradorT, iteradorP;
+                                tempo_futuro[ind] = 999999; // inf
+                                for (iteradorT = lista.front().t.begin(), iteradorP = lista.front().p.begin(); iteradorT != lista.front().t.end(); ++iteradorT, ++iteradorP)
+                                    if (pag * pagina <= *iteradorP + lista.front().base && *iteradorP + lista.front().base < pag * (pagina + 1)) {
+                                        tempo_futuro[ind] = *iteradorT;
+                                        break;
+                                    }
+                                for (int i = 0; i < tempo_futuro.size(); i++)
+                                    std::cout << tempo_futuro[i] << " ";
+                                std::cout << "\n";
+                            }
+                            
+                            std::cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << pi << ". Pagina " << floor(pi/pag) << " foi colocada na memoria fisica.\n";
+                            tabela[floor(pi/pag)].present = true;
+                            escreveArquivoMem(arquivo_fis, ind, lista.front(), &bitmap_mem, pag);
                         }
-                        std::cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << p << ". Pagina " << floor(p/pag) << " foi colocada na memoria fisica.\n";
-                        tabela[floor(p/pag)].present = true;
-                        escreveArquivoMem(arquivo_fis, ind, lista.front(), &bitmap_mem, pag);
-                    }
-                    else {
-                        if (!tabela[floor(p / pag)].present) {
+                        else {
                             // Paginacao
-                            if (paginacao == 1) Optimal(tabela, floor(p / pag), arquivo_fis, tempo_futuro, lista.front(), &bitmap_mem, pag);
+                            if (paginacao == 1) Optimal(tabela, floor(pi / pag), arquivo_fis, tempo_futuro, lista.front(), &bitmap_mem, pag, ant_tabela);
                             else if (paginacao == 2) SecondChance();
                             else if (paginacao == 3) Clock();
                             else if (paginacao == 4) LRU();
                         }
                     }
-
-                    lista.sort();
+                    else {
+                        std::list<int>::const_iterator iteradorT, iteradorP;
+                        tempo_futuro[tabela[pagina].numero_fis] = 999999; // inf
+                        for (iteradorT = lista.front().t.begin(), iteradorP = lista.front().p.begin(); iteradorT != lista.front().t.end(); ++iteradorT, ++iteradorP)
+                            if (pag * pagina <= *iteradorP + lista.front().base && *iteradorP + lista.front().base < pag * (pagina + 1)) {
+                                tempo_futuro[tabela[pagina].numero_fis] = *iteradorT;
+                                break;
+                            }
+                        for (int i = 0; i < tempo_futuro.size(); i++)
+                            std::cout << tempo_futuro[i] << " ";
+                        std::cout << "\n";
+                    }
+                    
                 }
+                lista.sort();
             }
-            
             Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
-            imprimeBitmap(bitmap_vir);
             PID++;
             lista.push_back(p);
             lista.sort();
-	}
+        }
     }
     
     fechaArquivos(arquivo_fis,arquivo_vir);
