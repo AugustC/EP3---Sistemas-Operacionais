@@ -3,13 +3,13 @@
 
 class Processo {
 
-    int base;
-    std::list<int> p;
-    std::list<int> t;
     unsigned int PID;
     
 public:
 
+    std::list<int> p;
+    std::list<int> t;
+    int base;
     std::string nome;
     int limite;
     
