@@ -22,6 +22,7 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo p, std::vector<bool> *bitm
 void escreveArquivoMem(fstream &arquivo_mem, std::vector<Pagina> tabela, int i, Processo p, std::vector<bool> *bitmap);
 void deletaProcessoArquivo(fstream &arquivo, Processo p, int base);
 std::vector<Pagina> criaTabela(int quant_paginas);
+void trocaPaginaTabela(std::vector<Pagina> *tabela, int ind_pagina_anterior, int ind_pagina_nova, int endereco);
 
 // Gerencia de espaco livre
 int FirstFit(int program_size, std::vector<bool> bitmap);
