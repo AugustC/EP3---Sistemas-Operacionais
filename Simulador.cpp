@@ -55,8 +55,16 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo *p, std::vector<bool> *bit
     int tamanho_b = (*bitmap).size();
     arquivo_mem.seekp(base);
     
-    for (int i = 0; i < limite; i+=len)
-        arquivo_mem.write(pidchar, len);
+    // arquivo
+    arquivo_mem.seekp(base);
+    for (int i = 0; i < limite; i+=len) {
+        if ((i+len) > limite)
+            arquivo_mem.write(pidchar, limite - i);
+        else 
+            arquivo_mem.write(pidchar, len); 
+    }
+
+    // bitmap
     for (int i = 0; i < limite; i++)
         (*bitmap)[(i + base) % tamanho_b] = 1;
 }
@@ -69,7 +77,15 @@ void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, std::vector
     int tamanho_b = (*bitmap).size();
     arquivo_mem.seekp(endereco_ini);
 
-    // Escreve no arquivo
+    // arquivo
+    for (int i = 0; i < pag; i+=len) {
+        if ((i+len) > pag)
+            arquivo_mem.write(pidchar, pag - i);
+        else
+            arquivo_mem.write(pidchar, len);
+    }
+
+    // bitmap
     for (int i = 0; i < pag; i++)
         (*bitmap)[(i + endereco_ini) % tamanho_b] = 1;
 }
@@ -225,6 +241,7 @@ void Optimal(std::vector<Pagina> tabela, int p, fstream &arquivo, std::vector<in
     
     return;
 }
+
 void SecondChance(){
     return;
 }
