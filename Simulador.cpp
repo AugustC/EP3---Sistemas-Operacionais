@@ -68,6 +68,7 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo *p, std::vector<bool> *bit
     for (int i = 0; i < limite; i++)
         (*bitmap)[(i + base) % tamanho_b] = 1;
 }
+
 void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, std::vector<bool> *bitmap, int pag){
     
     int endereco_ini = indice * pag;
@@ -89,7 +90,15 @@ void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, std::vector
     for (int i = 0; i < pag; i++)
         (*bitmap)[(i + endereco_ini) % tamanho_b] = 1;
 }
-
+std::vector<Pagina> criaTabela(int quant_paginas){
+    // Cria a tabela de paginas
+    std::vector<Pagina> tabela(quant_paginas);
+    for (int i = 0; i < tabela.size(); i++) {
+        Pagina pag = Pagina();
+        tabela[i] = pag;
+    }
+    return tabela;
+}
 
 // Gerencia de espaco livre
 int FirstFit(int tamanho_p, std::vector<bool> bitmap){ 
@@ -332,7 +341,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     std::vector<bool> bitmap_mem(quant_maxima);
     std::vector<bool> bitmap_vir(virtual_m);
     std::list<Processo> lista;
-    std::vector<Pagina> tabela;
+    std::vector<Pagina> tabela = criaTabela(quant_maxima);
     std::vector<int> tempo_futuro(quant_maxima);
     
     while(std::getline(*arq, linha)) {
@@ -364,15 +373,18 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 }
                 
                 else {
-                    // Paginacao    
-                    if (bitmap_mem.end() != std::find(bitmap_mem.begin(), bitmap_mem.end(), false)) {
+                    // Paginacao
+                    auto livre = std::find(bitmap_mem.begin(), bitmap_mem.end(), false);
+                    if (livre != bitmap_mem.end()) {
                         // Tem algum espaco livre na memoria fisica
-                        
+                        int ind = std::distance(bitmap_mem.begin(), livre);
+                        bitmap_mem[ind] = true;
                         if (paginacao == 1) {
                             // Adiciona proximo tempo ao vetor tempo_futuro
                         }
                         std::cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << p << ". Pagina " << floor(p/pag) << " foi colocada na memoria fisica.\n";
-                        
+                        tabela[floor(p/pag)].present = true;
+                        escreveArquivoMem(arquivo_fis, ind, lista.front(), &bitmap_mem, pag);
                     }
                     else {
                         if (!tabela[floor(p / pag)].present) {
