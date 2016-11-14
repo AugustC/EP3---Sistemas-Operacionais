@@ -3,8 +3,9 @@
 class Pagina {
 
 public:
-    bool R = false;
-    bool M = false;
+    bool R;
+    bool M;
     bool present;
-    
+
+    Pagina();
 };
