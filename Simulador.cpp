@@ -11,6 +11,70 @@
 
 using namespace std;
 
+// Etc
+void imprimeBitmap(std::vector<bool> bitmap){
+    for (int i = 0; i < bitmap.size(); i++)
+        std::cout << bitmap[i];
+    std::cout << "\n";
+}
+void zeraR();
+void copiaMem_Vir();
+void copiaVir_Mem();
+void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
+    // Cria o arquivo /tmp/ep3.mem e preenche com -1
+    arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
+    
+    for (int i = 0; i < total; i+=2) {
+        arquivo_mem.write("-", 1);
+        if ((i+1) != total)
+            arquivo_mem.write("1", 1);
+    }
+
+}
+void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m) {
+    // Cria o arquivo /tmp/ep3.mem e preenche com -1
+    arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
+    
+    for (int i = 0; i < virtual_m; i+=2) {
+        arquivo_vir.write("-", 1);
+        if ((i+1) != virtual_m)
+            arquivo_vir.write("1", 1);
+    }
+}
+void fechaArquivos(fstream &file1, fstream &file2) {
+    file1.close();
+    file2.close();
+}
+void escreveArquivoVir(fstream &arquivo_mem, Processo *p, std::vector<bool> *bitmap){
+
+    int base = p->pega_endereco() + 1;
+    int limite = p->limite;
+    std::string pid = p->getPID();
+    const char * pidchar = pid.c_str();
+    int len = pid.size();
+    int tamanho_b = (*bitmap).size();
+    arquivo_mem.seekp(base);
+    
+    for (int i = 0; i < limite; i+=len)
+        arquivo_mem.write(pidchar, len);
+    for (int i = 0; i < limite; i++)
+        (*bitmap)[(i + base) % tamanho_b] = 1;
+}
+void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, std::vector<bool> *bitmap, int pag){
+    
+    int endereco_ini = indice * pag;
+    std::string pid = p.getPID();
+    const char * pidchar = pid.c_str();
+    int len = pid.size();
+    int tamanho_b = (*bitmap).size();
+    arquivo_mem.seekp(endereco_ini);
+
+    // Escreve no arquivo
+    for (int i = 0; i < pag; i++)
+        (*bitmap)[(i + endereco_ini) % tamanho_b] = 1;
+}
+
+
 // Gerencia de espaco livre
 int FirstFit(int tamanho_p, std::vector<bool> bitmap){ 
     // Coloca no primeiro lugar que couber o processo
@@ -146,60 +210,32 @@ int WorstFit(int tamanho_p, std::vector<bool> bitmap){
 
 
 // Paginacao
-void Optimal(std::vector<Pagina> tabela, int p, ofstream &arquivo);
-void SecondChance();
-void Clock();
-void LRU();
+void Optimal(std::vector<Pagina> tabela, int p, fstream &arquivo, std::vector<int> tempo_futuro, Processo proc, std::vector<bool> *bitmap, int pag){
+    std::vector<int>::iterator maximo = std::max_element(tempo_futuro.begin(), tempo_futuro.end());
+    int indice = std::distance(tempo_futuro.begin(), maximo);
 
-// Etc
-void imprimeBitmap(std::vector<bool> bitmap){
-    for (int i = 0; i < bitmap.size(); i++)
-        std::cout << bitmap[i];
-    std::cout << "\n";
-}
-void zeraR();
-void copiaMem_Vir();
-void copiaVir_Mem();
-void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
-    // Cria o arquivo /tmp/ep3.mem e preenche com -1
-    arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
+    std::cout << "Pagina " << indice << " foi trocada. Processo " << proc.getPID() << " utilizou a memoria " << p << "\n";
     
-    for (int i = 0; i < total; i+=2) {
-        arquivo_mem.write("-", 1);
-        if ((i+1) != total)
-            arquivo_mem.write("1", 1);
-    }
+    // Tira a pagina que demorara mais para executar, e coloca a que esta executando
+    tabela[indice].present = false;
+    tabela[p].present = true;
+    tabela[p].R = true;
+    
+    escreveArquivoMem(arquivo, indice, proc, bitmap, pag);
+    
+    return;
+}
+void SecondChance(){
+    return;
+}
+void Clock(){
+    return;
+}
+void LRU(){
+    return;
+}
 
-}
-void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m) {
-    // Cria o arquivo /tmp/ep3.mem e preenche com -1
-    arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
-    
-    for (int i = 0; i < virtual_m; i+=2) {
-        arquivo_vir.write("-", 1);
-        if ((i+1) != virtual_m)
-            arquivo_vir.write("1", 1);
-    }
-}
-void fechaArquivos(fstream &file1, fstream &file2) {
-    file1.close();
-    file2.close();
-}
-void escreveArquivoVir(fstream &arquivo_mem, Processo *p, std::vector<bool> *bitmap){
 
-    int base = p->pega_endereco() + 1;
-    int limite = p->limite;
-    std::string pid = p->getPID();
-    const char * pidchar = pid.c_str();
-    int len = pid.size();
-    int tamanho_b = (*bitmap).size();
-    arquivo_mem.seekp(base);
-    
-    for (int i = 0; i < limite; i+=len)
-        arquivo_mem.write(pidchar, len);
-    for (int i = 0; i < limite; i++)
-        (*bitmap)[(i + base) % tamanho_b] = 1;
-}
 void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, std::vector<bool> *bitmap) {
 
     int limite = p.limite;
@@ -280,6 +316,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     std::vector<bool> bitmap_vir(virtual_m);
     std::list<Processo> lista;
     std::vector<Pagina> tabela;
+    std::vector<int> tempo_futuro(quant_maxima);
     
     while(std::getline(*arq, linha)) {
         
@@ -314,11 +351,16 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                     if (bitmap_mem.end() != std::find(bitmap_mem.begin(), bitmap_mem.end(), false)) {
                         // Tem algum espaco livre na memoria fisica
                         
+                        if (paginacao == 1) {
+                            // Adiciona proximo tempo ao vetor tempo_futuro
+                        }
+                        std::cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << p << ". Pagina " << floor(p/pag) << " foi colocada na memoria fisica.\n";
+                        
                     }
                     else {
                         if (!tabela[floor(p / pag)].present) {
                             // Paginacao
-                            if (paginacao == 1) Optimal(tabela, p, arquivo_fis);
+                            if (paginacao == 1) Optimal(tabela, floor(p / pag), arquivo_fis, tempo_futuro, lista.front(), &bitmap_mem, pag);
                             else if (paginacao == 2) SecondChance();
                             else if (paginacao == 3) Clock();
                             else if (paginacao == 4) LRU();
