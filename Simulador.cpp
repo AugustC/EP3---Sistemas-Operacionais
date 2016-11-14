@@ -232,17 +232,17 @@ int WorstFit(int tamanho_p, std::vector<bool> bitmap){
 
 
 // Paginacao
-void Optimal(std::vector<Pagina> tabela, int p, fstream &arquivo, std::vector<int> tempo_futuro, Processo proc, std::vector<bool> *bitmap, int pag, std::vector<int> ant_tabela){
+void Optimal(std::vector<Pagina> *tabela, int p, fstream &arquivo, std::vector<int> tempo_futuro, Processo proc, std::vector<bool> *bitmap, int pag, std::vector<int> ant_tabela){
     std::vector<int>::iterator maximo = std::max_element(tempo_futuro.begin(), tempo_futuro.end());
     int indice = std::distance(tempo_futuro.begin(), maximo);
 
     std::cout << "Quadro de pagina " << indice << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
     
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
-    tabela[ant_tabela[indice]].present = false;
-    tabela[p].present = true;
-    tabela[p].R = true;
-    tabela[p].numero_fis = indice;
+    (*tabela)[ant_tabela[indice]].present = false;
+    (*tabela)[p].present = true;
+    (*tabela)[p].R = true;
+    (*tabela)[p].numero_fis = indice;
     
     tempo_futuro[indice] = 999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
     std::list<int>::const_iterator iteradorT, iteradorP;
@@ -423,7 +423,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         }
                         else {
                             // Paginacao
-                            if (paginacao == 1) Optimal(tabela, floor(pi / pag), arquivo_fis, tempo_futuro, lista.front(), &bitmap_mem, pag, ant_tabela);
+                            if (paginacao == 1) Optimal(&tabela, floor(pi / pag), arquivo_fis, tempo_futuro, lista.front(), &bitmap_mem, pag, ant_tabela);
                             else if (paginacao == 2) SecondChance();
                             else if (paginacao == 3) Clock();
                             else if (paginacao == 4) LRU();
