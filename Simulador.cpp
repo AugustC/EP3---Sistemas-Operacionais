@@ -18,8 +18,6 @@ void imprimeBitmap(std::vector<bool> bitmap){
     std::cout << "\n";
 }
 void zeraR();
-void copiaMem_Vir();
-void copiaVir_Mem();
 void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
