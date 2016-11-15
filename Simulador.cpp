@@ -135,19 +135,15 @@ void trocaPaginaTabela(vector<Pagina> *tabela, int ind_pagina_anterior, int ind_
     (*tabela)[ind_pagina_nova].numero_fis = endereco;   
 }
 
-void clockLRU(vector<Pagina> *tabela, vector<int> *counter, int tam_counter) {
-    vector<Pagina>::iterator it;
-    vector<int>::iterator c_it;
-
-    for (it = tabela->begin(), c_it = counter->begin(); it != tabela->end(); it++, c_it++) {
-        *c_it = *c_it / 2;      // Desloca bits para a direita
-        if (it->R) 
-            *c_it += pow(2, tam_counter); // Adiciona 1 no bit mais significativo
+void clockLRU(vector<Pagina> *tabela, vector<int> *counter, int tam_counter, vector<int> ant_tabela) {
+    for (int i = 0; i < counter->size(); i++) {
+        (*counter)[i] = (*counter)[i] / 2;
+        if ((*tabela)[ant_tabela[i]].R)
+            (*counter)[i] += pow(2, tam_counter);
     }
-            
 }
 
-void checaIntervalo(int intervalo, int t_atual, vector<Pagina> *tab, vector<int> *count, vector<bool> mem, vector<bool> vir, bool done) {
+void checaIntervalo(int intervalo, int t_atual, vector<Pagina> *tab, vector<int> *count, vector<bool> mem, vector<bool> vir, bool done, vector<int> ant_tabela) {
     static int tempo_anterior = 0, tempo_R = 0;
     const int intervalo_R = 2, tam_counter = 8;
 
@@ -163,7 +159,7 @@ void checaIntervalo(int intervalo, int t_atual, vector<Pagina> *tab, vector<int>
     }
     // Se passou o tempo necessario para zerar os R's
     if (t_atual - tempo_R >= intervalo_R) {
-        clockLRU(tab, count, tam_counter);
+        clockLRU(tab, count, tam_counter, ant_tabela);
         zeraR(tab);
         tempo_R = t_atual;
     }
@@ -486,7 +482,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             t0 = 9999999;       // inf
             done = true;
         }
-        getline(*arq, linha);        
+        getline(*arq, linha);
                 
         if (lista.empty()) {
             // Lista vazia, coloca o proximo processo na lista
@@ -501,7 +497,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
             // Verifica o intervalo entre um evento e outro
             tempo_atual = atoi(token.c_str());
-            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done);
+            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
         }
         
         else {
@@ -515,7 +511,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
                 // Verifica o intervalo entre um evento e outro
                 tempo_atual = lista.front().proximo_tempo();
-                checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done);
+                checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
 
                 // Pega o p minimo dos processos que estao em execucao
                 int pi = lista.front().pega_endereco();
@@ -612,7 +608,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             }
             // Verifica o intervalo entre um evento e outro
             tempo_atual = t0;
-            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done);
+            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
         }
     }
 
