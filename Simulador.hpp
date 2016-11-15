@@ -24,6 +24,7 @@ void escreveArquivoMem(fstream &arquivo_mem, vector<Pagina> tabela, int i, Proce
 void deletaProcessoArquivo(fstream &arquivo, Processo p, int base);
 vector<Pagina> criaTabela(int quant_paginas);
 void trocaPaginaTabela(vector<Pagina> *tabela, int ind_pagina_anterior, int ind_pagina_nova, int endereco);
+void clockLRU(vector<Pagina> *tabela, vector<int> *counter, int tam_counter);
 
 // Gerencia de espaco livre
 int FirstFit(int program_size, vector<bool> bitmap);
