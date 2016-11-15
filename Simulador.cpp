@@ -18,7 +18,17 @@ void imprimeBitmap(vector<bool> bitmap){
     cout << "\n";
 }
 
-void zeraR();
+void imprimeEstadoMemoria(vector<bool> bitmap, fstream &arquivo){
+    return;
+}
+
+void zeraR(vector<Pagina> *tabela){
+    vector<Pagina>::iterator it, end;
+    end = tabela->end();
+    
+    for (it = tabela->begin(); it != end; it++)
+        it->R = false;
+}
 
 void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
@@ -398,6 +408,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     vector<int> ant_tabela(quant_maxima_fis);
     list<Pagina> fila;
     vector<Pagina> relogio;
+    int tempo_anterior, tempo_R, intervalo_R;
+    tempo_anterior = tempo_R = 0;
     
     while(getline(*arq, linha)) {
         
@@ -414,6 +426,13 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             string token;
             getline(linhastream, token, ' ');
             int t0 = atoi(token.c_str());
+
+            if (t0 - tempo_anterior > intervalo) {
+                imprimeEstadoMemoria(bitmap_vir, arquivo_vir);
+                imprimeEstadoMemoria(bitmap_mem, arquivo_fis);
+            }
+
+            if (t0 - tempo_R > intervalo_R) zeraR(&tabela);
             
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
                 // Pega o p minimo dos processos que estao em execucao
