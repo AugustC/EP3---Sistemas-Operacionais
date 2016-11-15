@@ -18,11 +18,21 @@ void imprimeBitmap(vector<bool> bitmap){
     cout << "\n";
 }
 
-void imprimeEstadoMemoria(vector<bool> bitmap, fstream &arquivo){
+void imprimeEstadoMemoria(vector<bool> bitmap, string arquivo){
     vector<bool>::iterator it;
+    cout << "Bitmap: ";
     for (it = bitmap.begin(); it != bitmap.end(); it++)
-        std::cout << *it << " ";
-    std::cout << "\n";
+        cout << *it << " ";
+    cout << "\n";
+            
+    string linha;
+    ifstream arq;
+    cout << "Arquivo " << arquivo << ": ";
+    arq.open(arquivo.c_str(), ios::in);
+    while(getline(arq, linha))
+        cout << linha << "\n";
+    arq.close();
+    
     return;
 }
 
@@ -34,7 +44,7 @@ void zeraR(vector<Pagina> *tabela){
         it->R = false;
 }
 
-void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
+void criaArquivoMem(ofstream &arquivo_mem, streamsize total) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
     
@@ -43,10 +53,11 @@ void criaArquivoMem(fstream &arquivo_mem, streamsize total) {
         if ((i+1) != total)
             arquivo_mem.write("1", 1);
     }
+    arquivo_mem.flush();
 
 }
 
-void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m) {
+void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
     
@@ -55,14 +66,15 @@ void criaArquivoVir(fstream &arquivo_vir, streamsize virtual_m) {
         if ((i+1) != virtual_m)
             arquivo_vir.write("1", 1);
     }
+    arquivo_vir.flush();
 }
 
-void fechaArquivos(fstream &file1, fstream &file2) {
+void fechaArquivos(ofstream &file1, ofstream &file2) {
     file1.close();
     file2.close();
 }
 
-void escreveArquivoVir(fstream &arquivo_mem, Processo *p, vector<bool> *bitmap){
+void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap){
 
     int base = p->pega_endereco() + 1;
     int limite = p->limite;
@@ -80,13 +92,14 @@ void escreveArquivoVir(fstream &arquivo_mem, Processo *p, vector<bool> *bitmap){
         else 
             arquivo_mem.write(pidchar, len); 
     }
-
+    arquivo_mem.flush();
+    
     // bitmap
     for (int i = 0; i < limite; i++)
         (*bitmap)[(i + base) % tamanho_b] = 1;
 }
 
-void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, int pag){
+void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag){
     
     int endereco_ini = indice * pag;
     string pid = p.getPID();
@@ -101,6 +114,7 @@ void escreveArquivoMem(fstream &arquivo_mem, int indice, Processo p, int pag){
         else
             arquivo_mem.write(pidchar, len);
     }
+    arquivo_mem.flush();
 }
 
 vector<Pagina> criaTabela(int quant_paginas){
@@ -133,7 +147,7 @@ void clockLRU(vector<Pagina> *tabela, vector<int> *counter, int tam_counter) {
             
 }
 
-void checaIntervalo(int intervalo, int t_atual, vector<Pagina> *tab, vector<int> *count, vector<bool> mem, vector<bool> vir, fstream &arq_vir, fstream &arq_mem, bool done) {
+void checaIntervalo(int intervalo, int t_atual, vector<Pagina> *tab, vector<int> *count, vector<bool> mem, vector<bool> vir, bool done) {
     static int tempo_anterior = 0, tempo_R = 0;
     const int intervalo_R = 2, tam_counter = 8;
 
@@ -142,8 +156,9 @@ void checaIntervalo(int intervalo, int t_atual, vector<Pagina> *tab, vector<int>
     
     // Se passou <intervalo> unidades de tempo
     if (t_atual - tempo_anterior >= intervalo) {
-        imprimeEstadoMemoria(vir, arq_vir);
-        imprimeEstadoMemoria(mem, arq_mem);
+        imprimeEstadoMemoria(vir, "/tmp/ep3.vir");
+        imprimeEstadoMemoria(mem, "/tmp/ep3.mem");
+        cout << "\n";
         tempo_anterior = t_atual;
     }
     // Se passou o tempo necessario para zerar os R's
@@ -288,7 +303,7 @@ int WorstFit(int tamanho_p, vector<bool> bitmap){
 }
 
 // Paginacao
-void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, fstream &arquivo, Processo proc, int pag, vector<int> ant_tabela){
+void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, ofstream &arquivo, Processo proc, int pag, vector<int> ant_tabela){
     vector<int>::iterator maximo = max_element((*tempo_futuro).begin(), (*tempo_futuro).end());
     int indice = distance((*tempo_futuro).begin(), maximo);
 
@@ -310,7 +325,7 @@ void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, fstream &
     return;
 }
 
-void SecondChance(list<Pagina> *fila, vector<Pagina> *tabela, int p, fstream &arquivo, Processo proc, int pag){
+void SecondChance(list<Pagina> *fila, vector<Pagina> *tabela, int p, ofstream &arquivo, Processo proc, int pag){
 
     while (fila->front().R) {
         fila->front().R = false;
@@ -332,7 +347,7 @@ void SecondChance(list<Pagina> *fila, vector<Pagina> *tabela, int p, fstream &ar
     return;
 }
 
-void Clock(vector<Pagina> *relogio, vector<Pagina> *tabela, int p, fstream &arquivo, Processo proc, int pag){
+void Clock(vector<Pagina> *relogio, vector<Pagina> *tabela, int p, ofstream &arquivo, Processo proc, int pag){
     static int i = 0;
     int tam = relogio->size();
     
@@ -355,7 +370,7 @@ void Clock(vector<Pagina> *relogio, vector<Pagina> *tabela, int p, fstream &arqu
     return;
 }
 
-void LRU(vector<int> *counter, vector<Pagina> *tabela, int p, fstream &arquivo, Processo proc, int pag, vector<int> ant_tabela) {
+void LRU(vector<int> *counter, vector<Pagina> *tabela, int p, ofstream &arquivo, Processo proc, int pag, vector<int> ant_tabela) {
 
     vector<int>::iterator min = min_element(begin(*counter), end(*counter));
     int quadro = distance(begin(*counter), min);
@@ -371,7 +386,7 @@ void LRU(vector<int> *counter, vector<Pagina> *tabela, int p, fstream &arquivo, 
     return;
 }
 
-void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, vector<bool> *bitmap) {
+void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool> *bitmap) {
 
     int limite = p.limite;
     string pid = p.getPID();
@@ -383,6 +398,7 @@ void deletaProcessoArquivo(fstream &arquivo, Processo p, int base, vector<bool> 
         if ((i+1) != limite)
             arquivo.write("1", 1);
     }
+    arquivo.flush();
 
     for (int i = 0; i < limite; i++)
         (*bitmap)[i + base] = 0;
@@ -445,7 +461,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     getline(linhastream, token, ' ');
     int pag = atoi(token.c_str());
  
-    fstream arquivo_fis, arquivo_vir;
+    ofstream arquivo_fis, arquivo_vir;
     criaArquivoMem(arquivo_fis, total);
     criaArquivoVir(arquivo_vir, virtual_m);
     int quant_maxima_vir = virtual_m/pag; // Quantidade de paginas que cabem na memoria virtual
@@ -485,7 +501,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
             // Verifica o intervalo entre um evento e outro
             tempo_atual = atoi(token.c_str());
-            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, arquivo_vir, arquivo_fis, done);
+            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done);
         }
         
         else {
@@ -499,7 +515,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
                 // Verifica o intervalo entre um evento e outro
                 tempo_atual = lista.front().proximo_tempo();
-                checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, arquivo_vir, arquivo_fis, done);
+                checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done);
 
                 // Pega o p minimo dos processos que estao em execucao
                 int pi = lista.front().pega_endereco();
@@ -586,17 +602,17 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 
                 lista.sort();
             }
+            if (!done) {
+                // Adiciona o processo da proxima linha na lista
+                Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
+                PID++;
+                escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
+                lista.push_back(p);
+                lista.sort();
+            }
             // Verifica o intervalo entre um evento e outro
             tempo_atual = t0;
-            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, arquivo_vir, arquivo_fis, done);
-            if (done) break;
-
-            // Adiciona o processo da proxima linha na lista
-            Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
-            escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
-            PID++;
-            lista.push_back(p);
-            lista.sort();
+            checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done);
         }
     }
 
