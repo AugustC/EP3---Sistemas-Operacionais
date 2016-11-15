@@ -13,7 +13,7 @@ using namespace std;
 // Etc
 void imprimeBitmap(vector<bool> bitmap);
 void imprimeEstadoMemoria(vector<bool> bitmap, fstream &arquivo);
-void zeraR();
+void zeraR(vector<Pagina> *tabela);
 void copiaMem_Vir();
 void copiaVir_Mem();
 void criaArquivoMem(fstream &arquivo_mem, streamsize total);
