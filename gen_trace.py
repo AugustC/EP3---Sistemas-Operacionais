@@ -3,15 +3,15 @@ import random
 import numpy as np
 
 # Numero de processos que serao gerados
-qtd = 10000	
+qtd = 1000	
 
 # Tamanho da memoria virtual
-mem_vir = 10000
+mem_vir = 100000
 
 # Tamanho da memoria fisica
 mem_fis = 1000
 
-# Tempo total de execucao (tf maximo, um numero grande), por enquanto nao uso isso
+# Tempo total de execucao (tf maximo, um numero grande)
 total_exec = 170
 
 # Unidade de alocacao
@@ -39,7 +39,9 @@ for i in range (1, qtd + 1):
 	x[i][1] = random.randint (x[i][0], total_exec) 
 
 	# tamanho do processo
-	x[i][2] = random.randint (5, 30) 
+	x[i][2] = random.randint (5, 30)
+	aux = x[i][2] % tam_pagina
+	x[i][2] = x[i][2] - aux
 
 	# escolhe 5 tempos e ordena
 	for j in range (0, 5):
