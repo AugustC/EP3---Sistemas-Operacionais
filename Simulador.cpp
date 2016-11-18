@@ -28,9 +28,16 @@ void imprimeEstadoMemoria(vector<bool> bitmap, string arquivo){
     string linha;
     ifstream arq;
     cout << "Arquivo " << arquivo << ": ";
-    arq.open(arquivo.c_str(), ios::in);
-    while(getline(arq, linha))
-        cout << linha << "\n";
+    arq.open(arquivo.c_str(), ios::in | ios::binary);
+
+    while(!arq.eof()) {
+        char n[4];
+        arq.read(n, 4);
+        cout << int32_t(*n) << " ";
+    }
+    cout << "\n";
+    // while(getline(arq, linha))
+    //     cout << linha << "\n";
     arq.close();
     
     return;
@@ -47,11 +54,14 @@ void zeraR(vector<Pagina> *tabela){
 void criaArquivoMem(ofstream &arquivo_mem, streamsize total) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_mem.open("/tmp/ep3.mem", ios::binary | ios::out);
+
+    int32_t um = -1;
     
-    for (int i = 0; i < total; i+=2) {
-        arquivo_mem.write("-", 1);
-        if ((i+1) != total)
-            arquivo_mem.write("1", 1);
+    for (int i = 0; i < total; i++) {
+        arquivo_mem.write((char *)&um, 4);
+        // arquivo_mem.write("-", 1);
+        // if ((i+1) != total)
+        //     arquivo_mem.write("1", 1);
     }
     arquivo_mem.flush();
 
@@ -60,11 +70,13 @@ void criaArquivoMem(ofstream &arquivo_mem, streamsize total) {
 void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m) {
     // Cria o arquivo /tmp/ep3.mem e preenche com -1
     arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
+    int32_t um = -1;
     
-    for (int i = 0; i < virtual_m; i+=2) {
-        arquivo_vir.write("-", 1);
-        if ((i+1) != virtual_m)
-            arquivo_vir.write("1", 1);
+    for (int i = 0; i < virtual_m; i++) {
+        arquivo_vir.write((char *)&um, 4);
+    //     arquivo_vir.write("-", 1);
+    //     if ((i+1) != virtual_m)
+    //         arquivo_vir.write("1", 1);
     }
     arquivo_vir.flush();
 }
@@ -79,6 +91,7 @@ void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap)
     int base = p->pega_endereco() + 1;
     int limite = p->limite;
     string pid = p->getPID();
+    int pidn = stoi(pid);
     const char * pidchar = pid.c_str();
     int len = pid.size();
     int tamanho_b = (*bitmap).size();
@@ -86,11 +99,12 @@ void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap)
     
     // arquivo
     arquivo_mem.seekp(base);
-    for (int i = 0; i < limite; i+=len) {
-        if ((i+len) > limite)
-            arquivo_mem.write(pidchar, limite - i);
-        else 
-            arquivo_mem.write(pidchar, len); 
+    for (int i = 0; i < limite; i++) {
+        arquivo_mem.write((char *)&pidn, 4);
+    //     if ((i+len) > limite)
+    //         arquivo_mem.write(pidchar, limite - i);
+    //     else 
+    //         arquivo_mem.write(pidchar, len); 
     }
     arquivo_mem.flush();
     
@@ -103,16 +117,18 @@ void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag){
     
     int endereco_ini = indice * pag;
     string pid = p.getPID();
+    int pidn = stoi(pid);
     const char * pidchar = pid.c_str();
     int len = pid.size();
     arquivo_mem.seekp(endereco_ini);
 
     // arquivo
-    for (int i = 0; i < pag; i+=len) {
-        if ((i+len) > pag)
-            arquivo_mem.write(pidchar, pag - i);
-        else
-            arquivo_mem.write(pidchar, len);
+    for (int i = 0; i < pag; i++) {
+        arquivo_mem.write((char *)&pidn, 4);
+        // if ((i+len) > pag)
+        //     arquivo_mem.write(pidchar, pag - i);
+        // else
+        //     arquivo_mem.write(pidchar, len);
     }
     arquivo_mem.flush();
 }
@@ -386,11 +402,13 @@ void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool>
     string pid = p.getPID();
     int len = pid.size();
     arquivo.seekp(base);
-
-    for (int i = 0; i < limite; i += 2) {
-        arquivo.write("-", 1);
-        if ((i+1) != limite)
-            arquivo.write("1", 1);
+    int32_t um = -1;
+    
+    for (int i = 0; i < limite; i++) {
+        arquivo.write((char *)&um, 4);
+        // arquivo.write("-", 1);
+        // if ((i+1) != limite)
+        //     arquivo.write("1", 1);
     }
     arquivo.flush();
 
