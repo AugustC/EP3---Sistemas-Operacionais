@@ -28,12 +28,16 @@ void imprimeEstadoMemoria(vector<bool> bitmap, string arquivo){
     string linha;
     ifstream arq;
     cout << "Arquivo " << arquivo << ": ";
+    
     arq.open(arquivo.c_str(), ios::in | ios::binary);
-
     while(!arq.eof()) {
-        char n[4];
-        arq.read(n, 4);
-        cout << int32_t(*n) << " ";
+        int32_t n;
+        arq.read((char *)&n, sizeof(int32_t));
+        if (arq.eof()) break;
+        if (n > 0)
+            cout << uint32_t(n) << " ";
+        else 
+            cout << n << " ";
     }
     cout << "\n";
     // while(getline(arq, linha))
@@ -58,7 +62,7 @@ void criaArquivoMem(ofstream &arquivo_mem, streamsize total) {
     int32_t um = -1;
     
     for (int i = 0; i < total; i++) {
-        arquivo_mem.write((char *)&um, 4);
+        arquivo_mem.write((char *)&um, sizeof(int32_t));
         // arquivo_mem.write("-", 1);
         // if ((i+1) != total)
         //     arquivo_mem.write("1", 1);
@@ -73,7 +77,7 @@ void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m) {
     int32_t um = -1;
     
     for (int i = 0; i < virtual_m; i++) {
-        arquivo_vir.write((char *)&um, 4);
+        arquivo_vir.write((char *)&um, sizeof(int32_t));
     //     arquivo_vir.write("-", 1);
     //     if ((i+1) != virtual_m)
     //         arquivo_vir.write("1", 1);
@@ -86,30 +90,24 @@ void fechaArquivos(ofstream &file1, ofstream &file2) {
     file2.close();
 }
 
-void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap){
+void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap, int tam_pagina){
 
     int base = p->pega_endereco() + 1;
     int limite = p->limite;
     string pid = p->getPID();
-    int pidn = stoi(pid);
-    const char * pidchar = pid.c_str();
-    int len = pid.size();
+    uint32_t pidn = stoi(pid);
     int tamanho_b = (*bitmap).size();
-    arquivo_mem.seekp(base);
+
+    int quant_paginas = ceil(limite / tam_pagina);
     
     // arquivo
-    arquivo_mem.seekp(base);
-    for (int i = 0; i < limite; i++) {
-        arquivo_mem.write((char *)&pidn, 4);
-    //     if ((i+len) > limite)
-    //         arquivo_mem.write(pidchar, limite - i);
-    //     else 
-    //         arquivo_mem.write(pidchar, len); 
-    }
+    arquivo_mem.seekp(4 * base);
+    for (int i = 0; i < quant_paginas * tam_pagina; i++) 
+        arquivo_mem.write((char *)&pidn, sizeof(uint32_t));
     arquivo_mem.flush();
     
     // bitmap
-    for (int i = 0; i < limite; i++)
+    for (int i = 0; i < quant_paginas * tam_pagina; i++)
         (*bitmap)[(i + base) % tamanho_b] = 1;
 }
 
@@ -117,19 +115,12 @@ void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag){
     
     int endereco_ini = indice * pag;
     string pid = p.getPID();
-    int pidn = stoi(pid);
-    const char * pidchar = pid.c_str();
-    int len = pid.size();
-    arquivo_mem.seekp(endereco_ini);
+    uint32_t pidn = stoi(pid);
+    arquivo_mem.seekp(4 * endereco_ini);
 
     // arquivo
-    for (int i = 0; i < pag; i++) {
-        arquivo_mem.write((char *)&pidn, 4);
-        // if ((i+len) > pag)
-        //     arquivo_mem.write(pidchar, pag - i);
-        // else
-        //     arquivo_mem.write(pidchar, len);
-    }
+    for (int i = 0; i < pag; i++) 
+        arquivo_mem.write((char *)&pidn, sizeof(uint32_t));
     arquivo_mem.flush();
 }
 
@@ -399,13 +390,11 @@ void LRU(vector<int> *counter, vector<Pagina> *tabela, int p, ofstream &arquivo,
 void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool> *bitmap) {
 
     int limite = p.limite;
-    string pid = p.getPID();
-    int len = pid.size();
-    arquivo.seekp(base);
+    arquivo.seekp(4 * base);
     int32_t um = -1;
     
     for (int i = 0; i < limite; i++) {
-        arquivo.write((char *)&um, 4);
+        arquivo.write((char *)&um, sizeof(int32_t));
         // arquivo.write("-", 1);
         // if ((i+1) != limite)
         //     arquivo.write("1", 1);
@@ -416,7 +405,7 @@ void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool>
         (*bitmap)[i + base] = 0;
 }
 
-Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, vector<bool> bitmap) {
+Processo criaProcesso(string linha, int32_t PID, int gerenciadorMemoria, vector<bool> bitmap) {
     
     istringstream linhastream(linha);
     string token;
@@ -457,7 +446,7 @@ Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, vector<bool
 void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int intervalo){
 
     bool done = false;
-    int PID = 0;
+    uint32_t PID = 0;
     string linha;
     getline(*arq, linha);
     istringstream linhastream(linha);
@@ -478,7 +467,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     criaArquivoVir(arquivo_vir, virtual_m);
     int quant_maxima_vir = virtual_m/pag; // Quantidade de paginas que cabem na memoria virtual
     int quant_maxima_fis = total/pag;     // Quantidade de paginas que cabem na memoria fisica
-    vector<bool> bitmap_mem(quant_maxima_fis, false);
+    vector<bool> bitmap_mem(total, false);
     vector<bool> bitmap_vir(virtual_m, false);
     list<Processo> lista;       // lista de processos que estao executando
     vector<Pagina> tabela = criaTabela(quant_maxima_vir);
@@ -507,7 +496,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         
             Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             PID++;
-            escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
+            escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);
 	        lista.push_back(p);
 
             istringstream linhastream(linha);
@@ -519,7 +508,6 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
         }
         
-        // Lista contem processos
         else {
 
             istringstream linhastream(linha);
@@ -527,7 +515,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             getline(linhastream, token, ' ');
             t0 = atoi(token.c_str());
             
-            // Enquanto houver processos e o primeiro da lista ...... que?
+            // Enquanto houver processos na lista, o primeiro da lista eh o processo que fara o proximo evento
+            // (pois possui um ti menor do que o dos outros) 
             while (!lista.empty() && t0 > lista.front().proximo_tempo()){
 
                 // Verifica o intervalo entre um evento e outro
@@ -546,7 +535,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                     for (int i = lista.front().base; i < lista.front().base + lista.front().limite; i++)
                         if (tabela[pagina].present) {
                             int numero_fisico = tabela[pagina].numero_fis;
-                            bitmap_mem[numero_fisico] = false;
+                            for (int j = 0; j < pag; j++)
+                                bitmap_mem[numero_fisico * pag + j] = false;
                             tempo_futuro[numero_fisico] = 999999;                                // Optimal
                             fila.remove(tabela[pagina]);                                         // Second-chance
                             clock_counter = distance(relogio.begin(), find(relogio.begin(), relogio.end(), tabela[pagina])); // Clock
@@ -570,9 +560,10 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         if (livre != bitmap_mem.end()) {
                                                         
                             int ind = distance(bitmap_mem.begin(), livre);
-                            bitmap_mem[ind] = true;
-                            ant_tabela[ind] = pagina;
-                            tabela[pagina].numero_fis = ind;
+                            for (int i = 0; i < pag; i++)
+                                bitmap_mem[ind + i] = true;
+                            ant_tabela[floor(ind / pag)] = pagina;
+                            tabela[pagina].numero_fis = floor(ind / pag);
                             tabela[pagina].present = true;
                             tabela[pagina].R = true;
 
@@ -602,7 +593,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             
                             // cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << pi << ".";
                             // cout << "Pagina " << floor(pi/pag) << " foi colocada na memoria fisica.\n";
-                            escreveArquivoMem(arquivo_fis, ind, lista.front(), pag);
+                            escreveArquivoMem(arquivo_fis, ind / pag, lista.front(), pag);
                         }
 
                         // Senao, aplica paginacao
@@ -638,7 +629,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 // Adiciona o processo da proxima linha na lista
                 Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
                 PID++;
-                escreveArquivoVir(arquivo_vir, &p, &bitmap_vir);
+                escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);
                 lista.push_back(p);
                 lista.sort();
             }
