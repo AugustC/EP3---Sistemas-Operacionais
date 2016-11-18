@@ -3,7 +3,7 @@
 
 class Processo {
 
-    unsigned int PID;
+    uint32_t PID;
     
 public:
 
