@@ -3,7 +3,6 @@
 
 Pagina::Pagina(){
     R = false;
-    M = false;
     present = false;
 }
 
