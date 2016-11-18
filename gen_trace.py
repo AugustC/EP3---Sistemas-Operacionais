@@ -1,44 +1,82 @@
+import re
 import random
 import numpy as np
 
-# Aqui esta hardcoded, mas esse 10000 eh a qtd de processos
-x = np.zeros ((10001, 14));
+# Numero de processos que serao gerados
+qtd = 100000
+
+# Tamanho da memoria virtual
+mem_vir = 10000
+
+# Tamanho da memoria fisica
+mem_fis = 1000
+
+# Tempo total de execucao (tf maximo, um numero grande), por enquanto nao uso isso
+total_exec = 170
+
+# Unidade de alocacao
+unidade_alocacao = 5
+
+# Tamanho da pagina
+tam_pagina = 10
+
+# Temos etc
+x = np.zeros ((qtd + 1, 13));
 y = np.zeros (5);
 
-for i in range (1, 10001): # tamanho hardcoded
-        x[i][0] = random.randint (0, 45) #tempo de entrada
+# Tempo de entrada
+for i in range (1, qtd + 1): 
+	x[i][0] = random.randint (0, 45) 
 x.sort (axis=0)
 
-for i in range (1, 10001): #aqui tb
-        x[i][1] = i
-        x[i][2] = random.randint (x[i][0], x[i][0]+15) #tempo de saida
-        x[i][3] = random.randint (5, 30) #tamanho
-        for j in range (0, 5):
-                y[j] = random.randint (x[i][0], x[i][2])
-        y.sort();
-        for j in range (0, 5):
-                x[i][2*j+4] = random.randint (0, x[i][3])
-                x[i][2*j+5] = y[j]
+# memoria disponivel em ti
+mem_ocup = np.zeros(total_exec)
 
-x[0][0] = 300                   # total
-x[0][1] = 300000                # virtual
-x[0][2] = 5                     # s
-x[0][3] = 10                    # p
+# Tempos de para os traces e acessos
+for i in range (1, qtd + 1): 
+
+	# tempo de saida
+	x[i][1] = random.randint (x[i][0], x[i][0]+15) 
+
+	# tamanho do processo
+	x[i][2] = random.randint (5, 30) 
+
+	# escolhe 5 tempos e ordena
+	for j in range (0, 5):
+		y[j] = random.randint (x[i][0], x[i][1])
+	y.sort();
+
+	# processo vai acessar em um tempo, se naquele momento tiver memoria disponivel
+	for j in range (0, 5):
+		
+		if mem_ocup[y[j]] + tam_pagina < mem_fis:
+			x[i][2*j+3] = random.randint (0, x[i][2])
+			x[i][2*j+4] = y[j]
+			mem_ocup[y[j]] = mem_ocup[y[j]] + tam_pagina
+
+# header
+x[0][0] = mem_fis                # total
+x[0][1] = mem_vir                # virtual
+x[0][2] = unidade_alocacao       # s
+x[0][3] = tam_pagina             # p
 
 np.savetxt ('trace_inicial', x, delimiter = ' ', fmt='%d')
 
+# nomeia os processos
 cont = 0
 with open('trace_inicial', 'r') as f:
+	
+	lines = f.readlines()
+	linesf = []
+	linesf.append(lines[0])
+	trace = lines[1:]
+    
+	for line in trace:
 
-        lines = f.readlines()
-        linesf = []
-
-        lines = [line[:1] + ' P' + line[1:] for line in lines]
-
-        for line in lines:
-                linha = line[:3] + str(cont) + line[3:]
-                linesf.append(linha)
-                cont = cont + 1
+		nums = re.findall('\d+', line)
+		linha = nums[0] + ' P' + str(cont) + ' ' + ' '.join(nums[1:]) + '\n'
+		linesf.append(linha)
+		cont = cont + 1
 
 with open('trace_final', 'w') as f:
-        f.writelines(linesf)
+    f.writelines(linesf)
