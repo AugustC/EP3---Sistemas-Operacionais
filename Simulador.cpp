@@ -33,7 +33,10 @@ void imprimeEstadoMemoria(vector<bool> bitmap, string arquivo){
     while(!arq.eof()) {
         int32_t n;
         arq.read((char *)&n, sizeof(int32_t));
-        cout << n << " ";
+        if (n > 0)
+            cout << uint32_t(n) << " ";
+        else 
+            cout << n << " ";
     }
     cout << "\n";
     // while(getline(arq, linha))
