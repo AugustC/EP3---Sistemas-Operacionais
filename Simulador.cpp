@@ -460,17 +460,17 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     criaArquivoVir(arquivo_vir, virtual_m);
     int quant_maxima_vir = virtual_m/pag; // Quantidade de paginas que cabem na memoria virtual
     int quant_maxima_fis = total/pag;     // Quantidade de paginas que cabem na memoria fisica
-    vector<bool> bitmap_mem(quant_maxima_fis);
-    vector<bool> bitmap_vir(virtual_m);
+    vector<bool> bitmap_mem(quant_maxima_fis, false);
+    vector<bool> bitmap_vir(virtual_m, false);
     list<Processo> lista;       // lista de processos que estao executando
     vector<Pagina> tabela = criaTabela(quant_maxima_vir);
     vector<int> ant_tabela(quant_maxima_fis);
-    int t0 = 0, tempo_atual;
+    int t0 = 0, tempo_atual, clock_counter = 0;
 
     // Estruturas de dados para os algoritmos de paginacao
     vector<int> tempo_futuro(quant_maxima_fis); // Optimal
     list<Pagina> fila;                          // Second-chance
-    vector<Pagina> relogio;                     // Clock
+    vector<Pagina> relogio(quant_maxima_fis);   // Clock
     vector<int> counter(quant_maxima_fis);      // LRU
     
     // Enquanto 
@@ -531,10 +531,11 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             bitmap_mem[numero_fisico] = false;
                             tempo_futuro[numero_fisico] = 999999;                                // Optimal
                             fila.remove(tabela[pagina]);                                         // Second-chance
-                            relogio.erase(find(relogio.begin(), relogio.end(), tabela[pagina])); // Clock
+                            clock_counter = distance(relogio.begin(), find(relogio.begin(), relogio.end(), tabela[pagina])); // Clock
+                            clock_counter = (clock_counter + 1) % relogio.size();
                             counter[numero_fisico] = 0;                                          // LRU
                         }
-  
+                    
                     lista.pop_front();
                     lista.sort();
                 }
@@ -577,7 +578,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
                             // Clock
                             else if (paginacao == 3) {
-                                relogio.insert(relogio.end(), tabela[pagina]);
+                                relogio[clock_counter] = tabela[pagina];
+                                clock_counter = (clock_counter + 1) % relogio.size();
                             }
                             
                             // cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << pi << ".";
