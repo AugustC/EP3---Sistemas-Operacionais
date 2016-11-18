@@ -28,12 +28,12 @@ void imprimeEstadoMemoria(vector<bool> bitmap, string arquivo){
     string linha;
     ifstream arq;
     cout << "Arquivo " << arquivo << ": ";
+    
     arq.open(arquivo.c_str(), ios::in | ios::binary);
-
     while(!arq.eof()) {
-        char n[4];
-        arq.read(n, 4);
-        cout << int32_t(*n) << " ";
+        int32_t n;
+        arq.read((char *)&n, sizeof(int32_t));
+        cout << n << " ";
     }
     cout << "\n";
     // while(getline(arq, linha))
@@ -58,7 +58,7 @@ void criaArquivoMem(ofstream &arquivo_mem, streamsize total) {
     int32_t um = -1;
     
     for (int i = 0; i < total; i++) {
-        arquivo_mem.write((char *)&um, 4);
+        arquivo_mem.write((char *)&um, sizeof(int32_t));
         // arquivo_mem.write("-", 1);
         // if ((i+1) != total)
         //     arquivo_mem.write("1", 1);
@@ -73,7 +73,7 @@ void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m) {
     int32_t um = -1;
     
     for (int i = 0; i < virtual_m; i++) {
-        arquivo_vir.write((char *)&um, 4);
+        arquivo_vir.write((char *)&um, sizeof(int32_t));
     //     arquivo_vir.write("-", 1);
     //     if ((i+1) != virtual_m)
     //         arquivo_vir.write("1", 1);
@@ -91,16 +91,15 @@ void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap)
     int base = p->pega_endereco() + 1;
     int limite = p->limite;
     string pid = p->getPID();
-    int pidn = stoi(pid);
+    uint32_t pidn = stoi(pid);
     const char * pidchar = pid.c_str();
     int len = pid.size();
     int tamanho_b = (*bitmap).size();
-    arquivo_mem.seekp(base);
     
     // arquivo
-    arquivo_mem.seekp(base);
+    arquivo_mem.seekp(4 * base);
     for (int i = 0; i < limite; i++) {
-        arquivo_mem.write((char *)&pidn, 4);
+        arquivo_mem.write((char *)&pidn, sizeof(uint32_t));
     //     if ((i+len) > limite)
     //         arquivo_mem.write(pidchar, limite - i);
     //     else 
@@ -117,14 +116,12 @@ void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag){
     
     int endereco_ini = indice * pag;
     string pid = p.getPID();
-    int pidn = stoi(pid);
-    const char * pidchar = pid.c_str();
-    int len = pid.size();
-    arquivo_mem.seekp(endereco_ini);
+    uint32_t pidn = stoi(pid);
+    arquivo_mem.seekp(4 * endereco_ini);
 
     // arquivo
     for (int i = 0; i < pag; i++) {
-        arquivo_mem.write((char *)&pidn, 4);
+        arquivo_mem.write((char *)&pidn, sizeof(uint32_t));
         // if ((i+len) > pag)
         //     arquivo_mem.write(pidchar, pag - i);
         // else
@@ -399,13 +396,11 @@ void LRU(vector<int> *counter, vector<Pagina> *tabela, int p, ofstream &arquivo,
 void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool> *bitmap) {
 
     int limite = p.limite;
-    string pid = p.getPID();
-    int len = pid.size();
-    arquivo.seekp(base);
+    arquivo.seekp(4 * base);
     int32_t um = -1;
     
     for (int i = 0; i < limite; i++) {
-        arquivo.write((char *)&um, 4);
+        arquivo.write((char *)&um, sizeof(int32_t));
         // arquivo.write("-", 1);
         // if ((i+1) != limite)
         //     arquivo.write("1", 1);
@@ -416,7 +411,7 @@ void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool>
         (*bitmap)[i + base] = 0;
 }
 
-Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, vector<bool> bitmap) {
+Processo criaProcesso(string linha, int32_t PID, int gerenciadorMemoria, vector<bool> bitmap) {
     
     istringstream linhastream(linha);
     string token;
@@ -457,7 +452,7 @@ Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, vector<bool
 void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int intervalo){
 
     bool done = false;
-    int PID = 0;
+    uint32_t PID = 0;
     string linha;
     getline(*arq, linha);
     istringstream linhastream(linha);
