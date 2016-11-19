@@ -6,6 +6,7 @@
 #include<sstream>
 #include<string>
 #include<math.h>
+#include<limits>
 #include "Processos.hpp"
 #include "Paginas.hpp"
 
@@ -305,7 +306,7 @@ void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, ofstream 
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
     trocaPaginaTabela(tabela, ant_tabela[indice], p, indice);
     
-    (*tempo_futuro)[indice] = 99999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
+    (*tempo_futuro)[indice] = numeric_limits<int>::max(); // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
     list<int>::const_iterator iteradorT, iteradorP;
     for (iteradorT = proc.t.begin(), iteradorP = proc.p.begin(); iteradorT != proc.t.end(); ++iteradorT, ++iteradorP)
         if (pag * p <= *iteradorP + proc.base && *iteradorP + proc.base < pag * (p + 1)) {
@@ -464,7 +465,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
         // Se chegou no final do arquivo, repete o segundo while ate a lista ficar vazia
         if (arq->eof()){    
-            t0 = 999999999;       // inf
+            t0 = numeric_limits<int>::max();       // inf
             done = true;
         }
         
@@ -517,7 +518,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             int numero_fisico = tabela[pagina].numero_fis;
                             for (int j = 0; j < pag; j++)
                                 bitmap_mem[numero_fisico * pag + j] = false;
-                            tempo_futuro[numero_fisico] = 999999999;                            // Optimal
+                            tempo_futuro[numero_fisico] = numeric_limits<int>::max();                            // Optimal
                             fila.remove(tabela[pagina]);                                         // Second-chance
                             clock_counter = distance(relogio.begin(), find(relogio.begin(), relogio.end(), tabela[pagina])); // Clock
                             clock_counter = (clock_counter + 1) % relogio.size();
@@ -552,7 +553,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                                 
                                 // Adiciona proximo tempo ao vetor tempo_futuro
                                 list<int>::const_iterator iteradorT, iteradorP;
-                                tempo_futuro[floor(ind/pag)] = 999999999; // inf
+                                tempo_futuro[floor(ind/pag)] = numeric_limits<int>::max(); // inf
                                 for (iteradorT = lista.front().t.begin(), iteradorP = lista.front().p.begin(); iteradorT != lista.front().t.end(); ++iteradorT, ++iteradorP)
                                     if (pag * pagina <= *iteradorP + lista.front().base && *iteradorP + lista.front().base < pag * (pagina + 1)) {
                                         tempo_futuro[floor(ind/pag)] = *iteradorT;
@@ -589,7 +590,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         
                         // Para o optimal
                         list<int>::const_iterator iteradorT, iteradorP;
-                        tempo_futuro[tabela[pagina].numero_fis] = 999999999; // inf
+                        tempo_futuro[tabela[pagina].numero_fis] = numeric_limits<int>::max(); // inf
                         
                         for (iteradorT = lista.front().t.begin(), iteradorP = lista.front().p.begin(); iteradorT != lista.front().t.end(); ++iteradorT, ++iteradorP)
                             if (pag * pagina <= *iteradorP + lista.front().base && *iteradorP + lista.front().base < pag * (pagina + 1)) {
