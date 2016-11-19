@@ -72,12 +72,8 @@ void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m) {
     arquivo_vir.open("/tmp/ep3.vir", ios::binary | ios::out);
     int32_t um = -1;
     
-    for (int i = 0; i < virtual_m; i++) {
+    for (int i = 0; i < virtual_m; i++) 
         arquivo_vir.write((char *)&um, sizeof(int32_t));
-    //     arquivo_vir.write("-", 1);
-    //     if ((i+1) != virtual_m)
-    //         arquivo_vir.write("1", 1);
-    }
     arquivo_vir.flush();
 }
 
@@ -306,8 +302,6 @@ void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, ofstream 
     vector<int>::iterator maximo = max_element((*tempo_futuro).begin(), (*tempo_futuro).end());
     int indice = distance((*tempo_futuro).begin(), maximo);
 
-    // cout << "Quadro de pagina " << indice << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
-    
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
     trocaPaginaTabela(tabela, ant_tabela[indice], p, indice);
     
@@ -332,8 +326,6 @@ void SecondChance(list<Pagina> *fila, vector<Pagina> *tabela, int p, ofstream &a
         fila->pop_front();
     }
 
-    // cout << "Quadro de pagina " << fila->front().numero_fis << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
-    
     int endereco_fisico = fila->front().numero_fis;
     int pagina_anterior = fila->front().numero_tabela;
 
@@ -355,8 +347,6 @@ void Clock(vector<Pagina> *relogio, vector<Pagina> *tabela, int p, ofstream &arq
         i = (i + 1) % tam;
     }
 
-    // cout << "Quadro de pagina " << (*relogio)[i].numero_fis << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
-
     int endereco_fisico = (*relogio)[i].numero_fis;
     int pagina_anterior = (*relogio)[i].numero_tabela;
 
@@ -373,8 +363,6 @@ void LRU(vector<int> *counter, vector<Pagina> *tabela, int p, ofstream &arquivo,
     vector<int>::iterator min = min_element(begin(*counter), end(*counter));
     int quadro = distance(begin(*counter), min);
     
-    // cout << "Quadro de pagina " << quadro << " foi trocada. Processo " << proc.getPID() << " utilizou a pagina " << p << "\n";
-
     trocaPaginaTabela(tabela, ant_tabela[quadro], p, quadro);
     escreveArquivoMem(arquivo, quadro, proc, pag);
 
@@ -389,12 +377,8 @@ void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool>
     arquivo.seekp(4 * base);
     int32_t um = -1;
     
-    for (int i = 0; i < limite; i++) {
+    for (int i = 0; i < limite; i++)
         arquivo.write((char *)&um, sizeof(int32_t));
-        // arquivo.write("-", 1);
-        // if ((i+1) != limite)
-        //     arquivo.write("1", 1);
-    }
     arquivo.flush();
 
     for (int i = 0; i < limite; i++)
@@ -476,7 +460,6 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     vector<Pagina> relogio(quant_maxima_fis);   // Clock
     vector<int> counter(quant_maxima_fis);      // LRU
     
-    // Enquanto 
     while(!done) {
 
         // Se chegou no final do arquivo, repete o segundo while ate a lista ficar vazia
