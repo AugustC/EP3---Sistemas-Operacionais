@@ -40,8 +40,8 @@ void imprimeEstadoMemoria(vector<bool> bitmap, string arquivo){
             cout << n << " ";
     }
     cout << "\n";
-    // while(getline(arq, linha))
-    //     cout << linha << "\n";
+    while(getline(arq, linha))
+        cout << linha << "\n";
     arq.close();
     
     return;
@@ -61,12 +61,8 @@ void criaArquivoMem(ofstream &arquivo_mem, streamsize total) {
 
     int32_t um = -1;
     
-    for (int i = 0; i < total; i++) {
+    for (int i = 0; i < total; i++)
         arquivo_mem.write((char *)&um, sizeof(int32_t));
-        // arquivo_mem.write("-", 1);
-        // if ((i+1) != total)
-        //     arquivo_mem.write("1", 1);
-    }
     arquivo_mem.flush();
 
 }
@@ -315,7 +311,7 @@ void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, ofstream 
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
     trocaPaginaTabela(tabela, ant_tabela[indice], p, indice);
     
-    (*tempo_futuro)[indice] = 999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
+    (*tempo_futuro)[indice] = 99999999; // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
     list<int>::const_iterator iteradorT, iteradorP;
     for (iteradorT = proc.t.begin(), iteradorP = proc.p.begin(); iteradorT != proc.t.end(); ++iteradorT, ++iteradorP)
         if (pag * p <= *iteradorP + proc.base && *iteradorP + proc.base < pag * (p + 1)) {
@@ -485,7 +481,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
         // Se chegou no final do arquivo, repete o segundo while ate a lista ficar vazia
         if (arq->eof()){    
-            t0 = 9999999;       // inf
+            t0 = 999999999;       // inf
             done = true;
         }
         
@@ -496,8 +492,9 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         
             Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
             PID++;
+            cout << "Processo " << p.nome << " entrou no sistema com o PID: " << p.getPID() << "\n";
             escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);
-	        lista.push_back(p);
+            lista.push_back(p);
 
             istringstream linhastream(linha);
             string token;
@@ -537,7 +534,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             int numero_fisico = tabela[pagina].numero_fis;
                             for (int j = 0; j < pag; j++)
                                 bitmap_mem[numero_fisico * pag + j] = false;
-                            tempo_futuro[numero_fisico] = 999999;                                // Optimal
+                            tempo_futuro[numero_fisico] = 999999999;                            // Optimal
                             fila.remove(tabela[pagina]);                                         // Second-chance
                             clock_counter = distance(relogio.begin(), find(relogio.begin(), relogio.end(), tabela[pagina])); // Clock
                             clock_counter = (clock_counter + 1) % relogio.size();
@@ -572,10 +569,10 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                                 
                                 // Adiciona proximo tempo ao vetor tempo_futuro
                                 list<int>::const_iterator iteradorT, iteradorP;
-                                tempo_futuro[ind] = 999999; // inf
+                                tempo_futuro[floor(ind/pag)] = 999999999; // inf
                                 for (iteradorT = lista.front().t.begin(), iteradorP = lista.front().p.begin(); iteradorT != lista.front().t.end(); ++iteradorT, ++iteradorP)
                                     if (pag * pagina <= *iteradorP + lista.front().base && *iteradorP + lista.front().base < pag * (pagina + 1)) {
-                                        tempo_futuro[ind] = *iteradorT;
+                                        tempo_futuro[floor(ind/pag)] = *iteradorT;
                                         break;
                                     }
                             }
@@ -590,15 +587,12 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                                 relogio[clock_counter] = tabela[pagina];
                                 clock_counter = (clock_counter + 1) % relogio.size();
                             }
-                            
-                            // cout << "Processo " << lista.front().getPID() << " utilizou a memoria " << pi << ".";
-                            // cout << "Pagina " << floor(pi/pag) << " foi colocada na memoria fisica.\n";
+
                             escreveArquivoMem(arquivo_fis, ind / pag, lista.front(), pag);
                         }
 
                         // Senao, aplica paginacao
                         else {
-                            
                             if (paginacao == 1)      Optimal(&tempo_futuro, &tabela, pagina, arquivo_fis, lista.front(), pag, ant_tabela);
                             else if (paginacao == 2) SecondChance(&fila, &tabela, pagina, arquivo_fis, lista.front(), pag);
                             else if (paginacao == 3) Clock(&relogio, &tabela, pagina, arquivo_fis, lista.front(), pag);
@@ -612,7 +606,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                         
                         // Para o optimal
                         list<int>::const_iterator iteradorT, iteradorP;
-                        tempo_futuro[tabela[pagina].numero_fis] = 999999; // inf
+                        tempo_futuro[tabela[pagina].numero_fis] = 999999999; // inf
                         
                         for (iteradorT = lista.front().t.begin(), iteradorP = lista.front().p.begin(); iteradorT != lista.front().t.end(); ++iteradorT, ++iteradorP)
                             if (pag * pagina <= *iteradorP + lista.front().base && *iteradorP + lista.front().base < pag * (pagina + 1)) {
@@ -621,13 +615,14 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             }
                     }
                 }
-                
-                lista.sort();
+                if (!lista.empty())
+                    lista.sort();
             }
 
             if (!done) {
                 // Adiciona o processo da proxima linha na lista
                 Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
+                cout << "Processo " << p.nome << " entrou no sistema com o PID: " << p.getPID() << "\n";
                 PID++;
                 escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);
                 lista.push_back(p);
@@ -639,6 +634,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             checaIntervalo(intervalo, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
         }
     }
-
+    
+    cout << "Estado final das memorias: \n";
+    checaIntervalo(0, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
     fechaArquivos(arquivo_fis,arquivo_vir);    
 }
