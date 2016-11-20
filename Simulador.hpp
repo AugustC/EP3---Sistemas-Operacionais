@@ -1,3 +1,8 @@
+/***********************************************************/
+/*   Augusto Cesar Monteiro Silva - 8941234                */
+/*   Lucas Helfstein Rocha        - 8802426                */
+/***********************************************************/
+
 #include<iostream>
 #include<fstream>
 #include<vector>

@@ -1,5 +1,11 @@
+/***********************************************************/
+/*   Augusto Cesar Monteiro Silva - 8941234                */
+/*   Lucas Helfstein Rocha        - 8802426                */
+/***********************************************************/
+
 #include<iostream>
 #include<list>
+
 #include "Processos.hpp"
     
 Processo::Processo(int lim, int pid_in, std::list<int> p_in, std::list<int> t_in, std::string nome_in){

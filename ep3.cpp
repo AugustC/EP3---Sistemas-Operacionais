@@ -1,12 +1,16 @@
+/***********************************************************/
+/*   Augusto Cesar Monteiro Silva - 8941234                */
+/*   Lucas Helfstein Rocha        - 8802426                */
+/***********************************************************/
+
 #include<iostream>
 #include<cstdlib>
 #include<list>
 #include<fstream>
-#include "Simulador.hpp"
-
 #include<sstream>
 #include<string>
 
+#include "Simulador.hpp"
 using namespace std;
 
 // Prompt
@@ -17,77 +21,63 @@ int main(int argc, char* argv[]) {
     int intervalo;
     
     string token, linha, entrada, arquivo;
-    
-    arquivo = argv[1];
-    gerenciador = atoi(argv[2]);
-    paginacao = atoi(argv[3]);
-    intervalo = atoi(argv[4]);
-    
     ifstream f;
 
-    // while (1) {
+    while (1) {
 		
-    //     // prompt
-    //     cout << "(ep3): ";
-    //     getline(cin, entrada);
+        // prompt
+        cout << "(ep3): ";
+        getline(cin, entrada);
 
-    //     // comando
-    //     istringstream linhastream(entrada);        
-    //     getline(linhastream, token, ' ');
+        // comando
+        istringstream linhastream(entrada);        
+        getline(linhastream, token, ' ');
 
-    //     // casos do enunciado
-    //     if (token == "carrega") {
+        // casos do enunciado
+        if (token == "carrega") {
 			
-    //         getline(linhastream, token, ' ');
+            getline(linhastream, token, ' ');
 
-    //         // trata erro do arquivo
-    //         f.open(token.c_str(), ios::in);
-    //         if (!f)
-    // 	        cout << "Problema ao abrir o arquivo. Carregue novamente." << endl;
-    // 	    f.close();
+            // trata erro do arquivo
+            f.open(token.c_str(), ios::in);
+            if (!f)
+    	        cout << "Problema ao abrir o arquivo. Carregue novamente." << endl;
+    	    f.close();
 
-    // 	    arquivo = token;
-    //     }	
+    	    arquivo = token;
+        }	
 	    
-    //     else if (token == "espaco") {
+        else if (token == "espaco") {
 	    	
-    //         getline(linhastream, token, ' ');
-    //         gerenciador = atoi(token.c_str());
-    //     }
+            getline(linhastream, token, ' ');
+            gerenciador = atoi(token.c_str());
+        }
 	    
-    //     else if (token == "substitui") {
+        else if (token == "substitui") {
 	    	
-    //         getline(linhastream, token, ' ');
-    //         paginacao = atoi(token.c_str());
-    //     }
+            getline(linhastream, token, ' ');
+            paginacao = atoi(token.c_str());
+        }
 
-    //     else if (token == "executa") {
+        else if (token == "executa") {
 	    	
-    //         f.open(arquivo.c_str(), ios::in); // caso o usuario queira rodar de novo, nao precisa carregar outra vez
-    //         getline(linhastream, token, ' ');
-    //         intervalo = atoi(token.c_str());
-    //         simulador(&f, gerenciador, paginacao, intervalo);
-    //         f.close();
+            f.open(arquivo.c_str(), ios::in); // caso o usuario queira rodar de novo, nao precisa carregar outra vez
+            getline(linhastream, token, ' ');
+            intervalo = atoi(token.c_str());
+            simulador(&f, gerenciador, paginacao, intervalo);
+            f.close();
            
-    //     }
+        }
 
-    //     else if (token == "sai")
-    //         return (0);
+        else if (token == "sai")
+            return (0);
 		
-    //     else if (token == "\n")
-    //         cout << endl;
-    //     else 
-    //         cout << "Comando desconhecido"<< endl;
-    // }
+        else if (token == "\n")
+            cout << endl;
+        else 
+            cout << "Comando desconhecido" << endl;
+    }
 
-    // cout << "Você digitou: " << arquivo << endl;
-    // cout << "Você digitou: " << gerenciador << endl;
-    // cout << "Você digitou: " << paginacao << endl;
-    // cout << "Você digitou: " << intervalo << endl;
-
-    f.open(arquivo.c_str(), ios::in); // caso o usuario queira rodar de novo, nao precisa carregar outra vez
-    simulador(&f, gerenciador, paginacao, intervalo);
-    f.close();
 
     return 0;
 }

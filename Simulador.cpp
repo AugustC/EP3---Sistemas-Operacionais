@@ -1,3 +1,8 @@
+/***********************************************************/
+/*   Augusto Cesar Monteiro Silva - 8941234                */
+/*   Lucas Helfstein Rocha        - 8802426                */
+/***********************************************************/
+
 #include<iostream>
 #include<fstream>
 #include<algorithm>
@@ -128,7 +133,6 @@ void escreveOutputPaginacao(int alg_pag, int pagefaults){
 
 void escreveOutputMemoria(int alg_mem, clock_t tempo){
     // col1 é o algoritmo de gerencia de memória, col2 o tempo que levou pra achar a memoria
-
     ofstream fout;
     fout.open("output_memoria.txt", std::fstream::out | std::fstream::app);
     fout << alg_mem << "\t" << 1000.0 * tempo / CLOCKS_PER_SEC << endl; // em milisegundos
@@ -310,7 +314,7 @@ void Optimal(vector<int> *tempo_futuro, vector<Pagina> *tabela, int p, ofstream 
     // Tira a pagina que demorara mais para executar, e coloca a que esta executando
     trocaPaginaTabela(tabela, ant_tabela[indice], p, indice);
     
-    (*tempo_futuro)[indice] = numeric_limits<int>::max(); // Inf? Se a pagina nao for mais utilizada, o tempo futuro eh infinito
+    (*tempo_futuro)[indice] = numeric_limits<int>::max(); // Se a pagina nao for mais utilizada, o tempo futuro eh infinito
     list<int>::const_iterator iteradorT, iteradorP;
     for (iteradorT = proc.t.begin(), iteradorP = proc.p.begin(); iteradorT != proc.t.end(); ++iteradorT, ++iteradorP)
         if (pag * p <= *iteradorP + proc.base && *iteradorP + proc.base < pag * (p + 1)) {
@@ -340,6 +344,7 @@ void SecondChance(list<Pagina> *fila, vector<Pagina> *tabela, int p, ofstream &a
     
     fila->pop_front();
     fila->push_back((*tabela)[p]);
+
     return;
 }
 
@@ -409,6 +414,7 @@ Processo criaProcesso(string linha, int32_t PID, int gerenciadorMemoria, vector<
     int b = atoi(token.c_str());
     
     list<int> p, t;
+    
     // p_i = -1 significa que o processo nao esta usando a memoria no tempo t_i
     p.push_back(-1);
     t.push_back(t0);
@@ -616,6 +622,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                             }
                     }
                 }
+
                 if (!lista.empty())
                     lista.sort();
             }
@@ -624,7 +631,6 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
                 
                 // Adiciona o processo da proxima linha na lista
                 Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
-
                 cout << "Processo " << p.nome << " entrou no sistema com o PID: " << p.getPID() << "\n";
                 PID++;
                 escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);

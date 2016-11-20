@@ -1,0 +1,11 @@
+Augusto Cesar Monteiro Silva - 8941234
+Lucas Helfstein Rocha        - 8802426
+
+Para compilar o ep3, realize o comando:
+$ make
+
+Para limpar os arquivos objeros, o comando é:
+$ make clean
+
+Para entrar no simulador, o comando é o ./ep3 
+Dentro do simulador os comandos suportados são exatamente os descritos no enunciado.
