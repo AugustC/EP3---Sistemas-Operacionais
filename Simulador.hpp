@@ -4,6 +4,7 @@
 #include<cstring>
 #include<sstream>
 #include<string>
+
 #include "Processos.hpp"
 #include "Paginas.hpp"
 
@@ -21,7 +22,10 @@ void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m);
 void fechaArquivos(ofstream &file1, ofstream &file2);
 void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap);
 void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag);
-void escreveArquivoOutput(int alg_mem, int alg_pag, int pagefaults, float tempo);
+
+void escreveOutputPaginacao(int alg_pag, int pagefaults);
+void escreveOutputMemoria(int alg_mem, clock_t tempo);
+
 Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, vector<bool> bitmap);
 void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool> *bitmap);
 vector<Pagina> criaTabela(int quant_paginas);

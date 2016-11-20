@@ -7,6 +7,7 @@
 #include<string>
 #include<math.h>
 #include<limits>
+
 #include "Processos.hpp"
 #include "Paginas.hpp"
 
@@ -117,11 +118,20 @@ void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag){
     arquivo_mem.flush();
 }
 
-void escreveArquivoOutput(int alg_mem, int alg_pag, int pagefaults, float tempo){
-    // col1 é o algoritmo de gerencia de memória, col2 é o algoritmo de paginacao, col3 é o pagefault e col4 é o tempo
+void escreveOutputPaginacao(int alg_pag, int pagefaults){
+    // col1 é o algoritmo de paginacao, col2 os pagefault
     ofstream fout;
-    fout.open("output.txt", std::fstream::out | std::fstream::app);
-    fout << alg_mem << "\t" << alg_pag << "\t" << pagefaults << "\t" << tempo << endl;
+    fout.open("output_paginacao.txt", std::fstream::out | std::fstream::app);
+    fout << alg_pag << "\t" << pagefaults << endl;
+    fout.close();
+}
+
+void escreveOutputMemoria(int alg_mem, clock_t tempo){
+    // col1 é o algoritmo de gerencia de memória, col2 o tempo que levou pra achar a memoria
+
+    ofstream fout;
+    fout.open("output_memoria.txt", std::fstream::out | std::fstream::app);
+    fout << alg_mem << "\t" << 1000.0 * tempo / CLOCKS_PER_SEC << endl; // em milisegundos
     fout.close();
 }
 
@@ -396,6 +406,10 @@ void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool>
 
 Processo criaProcesso(string linha, int32_t PID, int gerenciadorMemoria, vector<bool> bitmap) {
     
+    // Para gerar outputs
+    clock_t c_start;
+    clock_t c_end;
+
     istringstream linhastream(linha);
     string token;
     
@@ -423,10 +437,16 @@ Processo criaProcesso(string linha, int32_t PID, int gerenciadorMemoria, vector<
     
     Processo proc = Processo(b, PID, p, t, nome);
     int base = 0;
+
+    c_start = clock();
     if (gerenciadorMemoria == 1) base = FirstFit(proc.limite, bitmap); 
     else if (gerenciadorMemoria == 2) base = NextFit(proc.limite, bitmap); 
     else if (gerenciadorMemoria == 3) base = BestFit(proc.limite, bitmap);
     else if (gerenciadorMemoria == 4) base = WorstFit(proc.limite, bitmap);
+    c_end = clock();
+
+    escreveOutputMemoria(gerenciadorMemoria, (c_end-c_start));
+    
     proc.definir_base(base);
     
     return proc;
@@ -481,8 +501,9 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             
         // Lista de processos vazia, coloca o proximo processo na lista    
         if (lista.empty()) {
-                        
+            
             Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
+            
             PID++;
             cout << "Processo " << p.nome << " entrou no sistema com o PID: " << p.getPID() << "\n";
             escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);
@@ -612,8 +633,10 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
             }
 
             if (!done) {
+                
                 // Adiciona o processo da proxima linha na lista
                 Processo p = criaProcesso(linha, PID, gerenciadorMemoria, bitmap_vir);
+
                 cout << "Processo " << p.nome << " entrou no sistema com o PID: " << p.getPID() << "\n";
                 PID++;
                 escreveArquivoVir(arquivo_vir, &p, &bitmap_vir, pag);
@@ -630,5 +653,5 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     cout << "Estado final das memorias: \n";
     checaIntervalo(0, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
     fechaArquivos(arquivo_fis,arquivo_vir);   
-    escreveArquivoOutput(0, 0, 0, 0.0); 
+    escreveOutputPaginacao(1, 0); 
 }
