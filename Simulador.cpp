@@ -251,13 +251,6 @@ int BestFit(int tamanho_p, vector<bool> bitmap){
             
             // Se processo cabe no buraco
             if (j >= tamanho_p) {
-                
-                // Caso especial (talvez precise de algo)
-                // if (j == tamanho) {
-                //     base_menor = aux_base;
-                //     return (base_menor);
-                // }
-                
                 // Se o tamanho do buraco for o menor ate agora, atualiza 
                 if (j < menor) {
                     menor = j;
@@ -296,13 +289,6 @@ int WorstFit(int tamanho_p, vector<bool> bitmap){
             
             // Se processo cabe no buraco
             if (j >= tamanho_p) {
-                
-                // Caso especial (talvez precise de algo)
-                // if (j == tamanho) {
-                //     base_maior = aux_base;
-                //     return (base_maior);
-                // }
-                
                 // Se o tamanho do buraco for o maior ate agora, atualiza 
                 if (j > maior) {
                     maior = j;
@@ -482,7 +468,8 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     vector<Pagina> tabela = criaTabela(quant_maxima_vir);
     vector<int> ant_tabela(quant_maxima_fis);
     int t0 = 0, tempo_atual, clock_counter = 0;
-
+    int pagefault = 0;
+    
     // Estruturas de dados para os algoritmos de paginacao
     vector<int> tempo_futuro(quant_maxima_fis); // Optimal
     list<Pagina> fila;                          // Second-chance
@@ -606,6 +593,7 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
 
                         // Senao, aplica paginacao
                         else {
+                            pagefault++;
                             if (paginacao == 1)      Optimal(&tempo_futuro, &tabela, pagina, arquivo_fis, lista.front(), pag, ant_tabela);
                             else if (paginacao == 2) SecondChance(&fila, &tabela, pagina, arquivo_fis, lista.front(), pag);
                             else if (paginacao == 3) Clock(&relogio, &tabela, pagina, arquivo_fis, lista.front(), pag);
@@ -653,5 +641,5 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     cout << "Estado final das memorias: \n";
     checaIntervalo(0, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
     fechaArquivos(arquivo_fis,arquivo_vir);   
-    escreveOutputPaginacao(1, 0); 
+    escreveOutputPaginacao(paginacao, pagefault); 
 }
