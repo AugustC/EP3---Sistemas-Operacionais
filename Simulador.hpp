@@ -21,6 +21,7 @@ void criaArquivoVir(ofstream &arquivo_vir, streamsize virtual_m);
 void fechaArquivos(ofstream &file1, ofstream &file2);
 void escreveArquivoVir(ofstream &arquivo_mem, Processo *p, vector<bool> *bitmap);
 void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag);
+void escreveArquivoOutput(int alg_mem, int alg_pag, int pagefaults, float tempo);
 Processo criaProcesso(string linha, int PID, int gerenciadorMemoria, vector<bool> bitmap);
 void deletaProcessoArquivo(ofstream &arquivo, Processo p, int base, vector<bool> *bitmap);
 vector<Pagina> criaTabela(int quant_paginas);

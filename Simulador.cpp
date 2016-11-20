@@ -117,6 +117,14 @@ void escreveArquivoMem(ofstream &arquivo_mem, int indice, Processo p, int pag){
     arquivo_mem.flush();
 }
 
+void escreveArquivoOutput(int alg_mem, int alg_pag, int pagefaults, float tempo){
+    // col1 é o algoritmo de gerencia de memória, col2 é o algoritmo de paginacao, col3 é o pagefault e col4 é o tempo
+    ofstream fout;
+    fout.open("output.txt", std::fstream::out | std::fstream::app);
+    fout << alg_mem << "\t" << alg_pag << "\t" << pagefaults << "\t" << tempo << endl;
+    fout.close();
+}
+
 vector<Pagina> criaTabela(int quant_paginas){
     // Cria a tabela de paginas
     vector<Pagina> tabela(quant_paginas);
@@ -621,5 +629,6 @@ void simulador(ifstream *arq, int gerenciadorMemoria, int paginacao, int interva
     
     cout << "Estado final das memorias: \n";
     checaIntervalo(0, tempo_atual, &tabela, &counter, bitmap_mem, bitmap_vir, done, ant_tabela);
-    fechaArquivos(arquivo_fis,arquivo_vir);    
+    fechaArquivos(arquivo_fis,arquivo_vir);   
+    escreveArquivoOutput(0, 0, 0, 0.0); 
 }
